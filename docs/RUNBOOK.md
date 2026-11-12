@@ -41,6 +41,7 @@ Run the same local gates as CI:
 uv run --locked ruff check .
 uv run --locked pytest -q
 cd apps/web && npm ci && npm run build
+cd apps/web && npx playwright install chromium && npm run test:e2e
 cd ../..
 make eval
 ```
@@ -48,6 +49,9 @@ make eval
 Evaluation outputs are synthetic and written to the ignored `evals/results/` directory. They
 measure components, not live Upwork behavior, semantic claim truth, or independent proposal
 quality.
+
+The browser smoke tests mock the jobs API and cover inbox rendering, job selection, and explicit
+marketplace outage feedback. They do not prove the full approval flow or live API behavior.
 
 ## Degraded mode and recovery
 
