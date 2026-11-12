@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: gigbid
+      POSTGRES_USER: gigbid
+      POSTGRES_PASSWORD: gigbid-local-only
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gigbid -d gigbid"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  gigsim:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.api
+    command: ["python", "-m", "gigsim_local"]
+    environment:
+      # Local development tokens for synthetic data only; override for any shared environment.
+      GIGSIM_HOST: 0.0.0.0
+      GIGSIM_USER_TOKENS: "gigsim-dev-token:dev-user"
+      GIGSIM_ADMIN_TOKEN: gigsim-admin-local-only
+    ports:
+      - "127.0.0.1:8100:8100"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health')"
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      DATABASE_URL: postgresql://gigbid:gigbid-local-only@postgres:5432/gigbid
+      GIGBID_PORTFOLIO_PATH: data/sample/portfolio_items.json
+      GIGBID_MARKETPLACE_MODE: gigsim
+      GIGSIM_BASE_URL: http://gigsim:8100
+      GIGSIM_API_TOKEN: gigsim-dev-token
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gigsim:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

@@ -1,0 +1,39 @@
+{
+  "name": "hand-authored-synthetic-retrieval-dev",
+  "version": "1.0",
+  "data_kind": "synthetic",
+  "evidence": [
+    {"id": "ai-classifier", "persona": "ml", "title": "Classifier validation", "content": "Built a Python classification model and evaluated precision and recall.", "skills": ["Python", "classification", "model evaluation"]},
+    {"id": "ai-rag", "persona": "ml", "title": "Retrieval assistant", "content": "Created a RAG assistant using vector search and Python.", "skills": ["RAG", "Python", "retrieval"]},
+    {"id": "ai-nlp", "persona": "ml", "title": "Text analysis", "content": "Developed an NLP text classification pipeline for support tickets.", "skills": ["NLP", "classification"]},
+    {"id": "ai-vision", "persona": "ml", "title": "Image classifier", "content": "Trained a computer vision model with PyTorch.", "skills": ["computer vision", "PyTorch"]},
+    {"id": "ai-deploy", "persona": "ml", "title": "Model service", "content": "Deployed a Python model service using FastAPI and Docker.", "skills": ["Python", "FastAPI", "Docker"]},
+    {"id": "ai-metrics", "persona": "ml", "title": "Experiment report", "content": "Compared model evaluation metrics and documented experiments.", "skills": ["model evaluation", "statistics"]},
+    {"id": "web-dashboard", "persona": "web", "title": "Analytics dashboard", "content": "Built a React dashboard with TypeScript and charts.", "skills": ["React", "TypeScript", "dashboard"]},
+    {"id": "web-api", "persona": "web", "title": "Service API", "content": "Developed a FastAPI service backed by PostgreSQL.", "skills": ["FastAPI", "PostgreSQL"]},
+    {"id": "web-auth", "persona": "web", "title": "Account portal", "content": "Implemented authentication and authorization for a React portal.", "skills": ["authentication", "React"]},
+    {"id": "web-tests", "persona": "web", "title": "Frontend tests", "content": "Wrote browser tests for a TypeScript user interface.", "skills": ["testing", "TypeScript"]},
+    {"id": "web-deploy", "persona": "web", "title": "Deployment pipeline", "content": "Packaged a Node.js service using Docker and automated deployment.", "skills": ["Node.js", "Docker"]},
+    {"id": "web-sql", "persona": "web", "title": "Database migration", "content": "Migrated customer records to PostgreSQL and verified data integrity.", "skills": ["PostgreSQL", "migration"]},
+    {"id": "data-report", "persona": "data", "title": "Sales report", "content": "Created a SQL sales report and a Power BI dashboard.", "skills": ["SQL", "Power BI", "dashboard"]},
+    {"id": "data-clean", "persona": "data", "title": "Data cleaning", "content": "Cleaned and validated datasets using Python and pandas.", "skills": ["Python", "pandas", "data cleaning"]},
+    {"id": "data-etl", "persona": "data", "title": "ETL workflow", "content": "Built an ETL pipeline with SQL and Python.", "skills": ["ETL", "SQL", "Python"]},
+    {"id": "data-test", "persona": "data", "title": "Experiment analysis", "content": "Analyzed an A/B test using statistics and Python.", "skills": ["A/B testing", "statistics", "Python"]},
+    {"id": "data-tableau", "persona": "data", "title": "Executive dashboard", "content": "Created a Tableau dashboard for executive reporting.", "skills": ["Tableau", "dashboard"]},
+    {"id": "data-excel", "persona": "data", "title": "Spreadsheet audit", "content": "Audited Excel worksheets and documented data quality issues.", "skills": ["Excel", "data cleaning"]}
+  ],
+  "queries": [
+    {"id": "ml-1", "persona": "ml", "job_type": "classification", "query": "Python classifier with precision and recall evaluation", "requirements": ["Python", "classification", "model evaluation"], "relevant_ids": ["ai-classifier", "ai-metrics", "ai-nlp"]},
+    {"id": "ml-2", "persona": "ml", "job_type": "retrieval", "query": "Build a retrieval augmented assistant using Python", "requirements": ["RAG", "Python"], "relevant_ids": ["ai-rag"]},
+    {"id": "ml-3", "persona": "ml", "job_type": "vision", "query": "Train an image model", "requirements": ["computer vision", "PyTorch"], "relevant_ids": ["ai-vision"]},
+    {"id": "ml-4", "persona": "ml", "job_type": "deployment", "query": "Serve a model in a container", "requirements": ["FastAPI", "Docker"], "relevant_ids": ["ai-deploy"]},
+    {"id": "web-1", "persona": "web", "job_type": "frontend", "query": "React TypeScript dashboard", "requirements": ["React", "TypeScript", "dashboard"], "relevant_ids": ["web-dashboard", "web-tests"]},
+    {"id": "web-2", "persona": "web", "job_type": "backend", "query": "Build an API backed by PostgreSQL", "requirements": ["FastAPI", "PostgreSQL"], "relevant_ids": ["web-api"]},
+    {"id": "web-3", "persona": "web", "job_type": "security", "query": "Add login and authorization to a web portal", "requirements": ["authentication", "React"], "relevant_ids": ["web-auth"]},
+    {"id": "web-4", "persona": "web", "job_type": "migration", "query": "Move customer data to PostgreSQL", "requirements": ["PostgreSQL", "migration"], "relevant_ids": ["web-sql"]},
+    {"id": "data-1", "persona": "data", "job_type": "reporting", "query": "SQL sales dashboard with Power BI", "requirements": ["SQL", "Power BI"], "relevant_ids": ["data-report"]},
+    {"id": "data-2", "persona": "data", "job_type": "preparation", "query": "Clean datasets using pandas", "requirements": ["data cleaning", "pandas"], "relevant_ids": ["data-clean"]},
+    {"id": "data-3", "persona": "data", "job_type": "experimentation", "query": "Analyze an experiment with statistics", "requirements": ["A/B testing", "statistics"], "relevant_ids": ["data-test"]},
+    {"id": "data-4", "persona": "data", "job_type": "pipeline", "query": "Python SQL ETL pipeline", "requirements": ["ETL", "SQL", "Python"], "relevant_ids": ["data-etl"]}
+  ]
+}

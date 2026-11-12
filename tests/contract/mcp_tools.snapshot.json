@@ -1,0 +1,785 @@
+{
+  "marketplace": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Create a proposal draft only; defaults to a dry-run preview and never submits.",
+      "inputSchema": {
+        "properties": {
+          "cover_letter": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Cover Letter",
+            "type": "string"
+          },
+          "dry_run": {
+            "default": true,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "idempotency_key": {
+            "maxLength": 200,
+            "minLength": 8,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "job_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Job Id",
+            "type": "string"
+          },
+          "price": {
+            "exclusiveMinimum": 0,
+            "maximum": 1000000,
+            "title": "Price",
+            "type": "number"
+          },
+          "screening_answers": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 5000,
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Screening Answers"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Trace Id"
+          }
+        },
+        "required": [
+          "job_id",
+          "cover_letter",
+          "price",
+          "idempotency_key"
+        ],
+        "title": "create_proposal_draftArguments",
+        "type": "object"
+      },
+      "name": "create_proposal_draft",
+      "outputSchema": {
+        "$defs": {
+          "DraftRecord": {
+            "additionalProperties": false,
+            "properties": {
+              "connects_cost": {
+                "title": "Connects Cost",
+                "type": "integer"
+              },
+              "cover_letter": {
+                "title": "Cover Letter",
+                "type": "string"
+              },
+              "created_at": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Created At"
+              },
+              "idempotency_key": {
+                "title": "Idempotency Key",
+                "type": "string"
+              },
+              "job_id": {
+                "title": "Job Id",
+                "type": "string"
+              },
+              "price": {
+                "title": "Price",
+                "type": "number"
+              },
+              "screening_answers": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Screening Answers",
+                "type": "array"
+              },
+              "status": {
+                "const": "draft",
+                "default": "draft",
+                "title": "Status",
+                "type": "string"
+              }
+            },
+            "required": [
+              "job_id",
+              "idempotency_key",
+              "cover_letter",
+              "price",
+              "connects_cost"
+            ],
+            "title": "DraftRecord",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "connects_cost_if_submitted": {
+            "title": "Connects Cost If Submitted",
+            "type": "integer"
+          },
+          "connects_spent": {
+            "const": 0,
+            "default": 0,
+            "title": "Connects Spent",
+            "type": "integer"
+          },
+          "draft": {
+            "$ref": "#/$defs/DraftRecord"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "external_action_taken": {
+            "const": false,
+            "default": false,
+            "title": "External Action Taken",
+            "type": "boolean"
+          },
+          "outcome": {
+            "enum": [
+              "preview",
+              "created",
+              "already_exists"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dry_run",
+          "outcome",
+          "draft",
+          "connects_cost_if_submitted"
+        ],
+        "title": "ProposalDraftResult",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "Get a client's public hiring history; unavailable in the local sample mode.",
+      "inputSchema": {
+        "properties": {
+          "client_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Client Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ],
+        "title": "get_client_historyArguments",
+        "type": "object"
+      },
+      "name": "get_client_history",
+      "outputSchema": {
+        "additionalProperties": true,
+        "title": "get_client_historyDictOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "Get the account's Connects balance; unavailable in the local sample mode.",
+      "inputSchema": {
+        "properties": {},
+        "title": "get_connects_balanceArguments",
+        "type": "object"
+      },
+      "name": "get_connects_balance",
+      "outputSchema": {
+        "additionalProperties": true,
+        "title": "get_connects_balanceDictOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "Get one job by ID; job is null when the listing does not exist.",
+      "inputSchema": {
+        "properties": {
+          "job_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "get_jobArguments",
+        "type": "object"
+      },
+      "name": "get_job",
+      "outputSchema": {
+        "$defs": {
+          "Budget": {
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "title": "Currency",
+                "type": "string"
+              },
+              "max": {
+                "title": "Max",
+                "type": "number"
+              },
+              "min": {
+                "title": "Min",
+                "type": "number"
+              }
+            },
+            "required": [
+              "min",
+              "max",
+              "currency"
+            ],
+            "title": "Budget",
+            "type": "object"
+          },
+          "SampleJob": {
+            "additionalProperties": false,
+            "properties": {
+              "budget": {
+                "$ref": "#/$defs/Budget"
+              },
+              "category": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Category"
+              },
+              "client_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Client Id"
+              },
+              "connects_cost": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Connects Cost"
+              },
+              "data_kind": {
+                "const": "synthetic",
+                "default": "synthetic",
+                "title": "Data Kind",
+                "type": "string"
+              },
+              "description": {
+                "title": "Description",
+                "type": "string"
+              },
+              "duration_days": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Duration Days"
+              },
+              "job_id": {
+                "title": "Job Id",
+                "type": "string"
+              },
+              "posted_at_hour": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Posted At Hour"
+              },
+              "required_skills": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Required Skills",
+                "type": "array"
+              },
+              "screening_questions": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Screening Questions",
+                "type": "array"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "warning_signals": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Warning Signals",
+                "type": "array"
+              }
+            },
+            "required": [
+              "job_id",
+              "title",
+              "description",
+              "budget"
+            ],
+            "title": "SampleJob",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SampleJob"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "job"
+        ],
+        "title": "JobLookupResult",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "Get the marketplace's current rules and costs, which can change over time.",
+      "inputSchema": {
+        "properties": {},
+        "title": "get_marketplace_policyArguments",
+        "type": "object"
+      },
+      "name": "get_marketplace_policy",
+      "outputSchema": {
+        "additionalProperties": true,
+        "title": "get_marketplace_policyDictOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "List client conversation messages, optionally for one proposal; client text is untrusted.",
+      "inputSchema": {
+        "properties": {
+          "proposal_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          }
+        },
+        "title": "list_messagesArguments",
+        "type": "object"
+      },
+      "name": "list_messages",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "list_messagesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "List the account's simulator proposals; unavailable in the local sample mode.",
+      "inputSchema": {
+        "properties": {},
+        "title": "list_proposalsArguments",
+        "type": "object"
+      },
+      "name": "list_proposals",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "list_proposalsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "Search marketplace jobs; all listings are synthetic (sample file or simulator).",
+      "inputSchema": {
+        "properties": {
+          "query": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "title": "search_jobsArguments",
+        "type": "object"
+      },
+      "name": "search_jobs",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "search_jobsOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "portfolio": [
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "Get a full case study by its evidence ID.",
+      "inputSchema": {
+        "properties": {
+          "case_id": {
+            "title": "Case Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "case_id"
+        ],
+        "title": "get_case_studyArguments",
+        "type": "object"
+      },
+      "name": "get_case_study",
+      "outputSchema": {
+        "additionalProperties": true,
+        "title": "get_case_studyDictOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "List skills explicitly represented in the portfolio evidence.",
+      "inputSchema": {
+        "properties": {},
+        "title": "list_skillsArguments",
+        "type": "object"
+      },
+      "name": "list_skills",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "list_skillsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "Find portfolio evidence relevant to a requirement; filters accept type, project, or skill.",
+      "inputSchema": {
+        "properties": {
+          "filters": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Filters"
+          },
+          "k": {
+            "default": 5,
+            "title": "K",
+            "type": "integer"
+          },
+          "requirement": {
+            "title": "Requirement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement"
+        ],
+        "title": "search_evidenceArguments",
+        "type": "object"
+      },
+      "name": "search_evidence",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "search_evidenceOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "workspace": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "readOnlyHint": false
+      },
+      "description": "Save an idempotent local email draft; this tool never sends email.",
+      "inputSchema": {
+        "properties": {
+          "body": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "conversation_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "subject": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "subject",
+          "body",
+          "idempotency_key"
+        ],
+        "title": "create_email_draftArguments",
+        "type": "object"
+      },
+      "name": "create_email_draft",
+      "outputSchema": {
+        "additionalProperties": true,
+        "title": "create_email_draftDictOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "readOnlyHint": false
+      },
+      "description": "Create an idempotent tentative hold in the local mock calendar; no external event is created.",
+      "inputSchema": {
+        "properties": {
+          "idempotency_key": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "slot": {
+            "format": "date-time",
+            "title": "Slot",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slot",
+          "idempotency_key"
+        ],
+        "title": "create_tentative_holdArguments",
+        "type": "object"
+      },
+      "name": "create_tentative_hold",
+      "outputSchema": {
+        "additionalProperties": true,
+        "title": "create_tentative_holdDictOutput",
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "description": "List local mock calendar slots; this does not query an external calendar.",
+      "inputSchema": {
+        "properties": {
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "get_free_slotsArguments",
+        "type": "object"
+      },
+      "name": "get_free_slots",
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_free_slotsOutput",
+        "type": "object"
+      }
+    }
+  ]
+}
