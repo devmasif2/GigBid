@@ -12,6 +12,7 @@ from langgraph.types import Send, interrupt
 from pydantic import ValidationError
 
 from agent import marketplace_mcp_client
+from agent.budgets import check_budget
 from agent.memory.store import promote_style_memory, trace_event
 from agent.nodes.analyst import analyze_job
 from agent.nodes.claim_sanitizer import sanitize_proposal
@@ -242,6 +243,7 @@ def build_bid_graph(
         raise ValueError("maximum_risk_score must be between 0 and 1")
 
     workflow = StateGraph(GigBidState)
+    workflow.add_node("budget_gate", check_budget)
     workflow.add_node("analyst", analyze_job)
     async def risk_assessor_async(state: GigBidState) -> dict[str, Any]:
         if os.environ.get("GIGBID_MARKETPLACE_MODE", "sample") != "gigsim":
@@ -376,7 +378,17 @@ def build_bid_graph(
         return asyncio.run(publish_draft_async(state))
 
     workflow.add_node("publish_draft", RunnableLambda(publish_draft_sync, publish_draft_async))
-    workflow.add_conditional_edges(START, _route_parallel, ["analyst", "risk_assessor", "fit_matcher"])
+    workflow.add_conditional_edges(
+        START, lambda state: "budget_gate", ["budget_gate"]
+    )
+    def route_after_budget(state: GigBidState) -> list[Send] | str:
+        if state.get("budget_status") == "needs_attention":
+            return END
+        return _route_parallel(state)
+
+    workflow.add_conditional_edges(
+        "budget_gate", route_after_budget, ["analyst", "risk_assessor", "fit_matcher", END]
+    )
     workflow.add_edge(["analyst", "risk_assessor", "fit_matcher"], "decide")
     workflow.add_conditional_edges(
         "decide", _route_decision, {"price": "price", END: END}

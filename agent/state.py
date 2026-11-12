@@ -29,6 +29,11 @@ class GigBidState(TypedDict, total=False):
     outcome_memory: list[dict[str, Any]]
     memory_events: list[dict[str, Any]]
     edit_count: int
+    step_budget: int
+    token_budget: int
+    budget_status: str
+    budget_steps_used: int
+    budget_tokens_used: int
 
 
 class ConversationState(TypedDict, total=False):

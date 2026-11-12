@@ -146,6 +146,11 @@ style preference is promoted; raw drafts and tool payloads are never copied into
 memory accepts only normalized `replied`, `hired`, or `lost` events and is not populated from
 arbitrary client text.
 
+Both graphs begin with a deterministic step/token budget gate. Defaults are 40 traced steps and
+12,000 estimated tokens; callers can provide lower per-thread budgets. Exceeding either budget
+ends the run with `approval_status=needs_attention` and a visible reason instead of continuing
+unbounded work. The estimates are local heuristics, not provider tokenizer usage.
+
 Both graphs and the API accept an injected checkpointer. The API selects `AsyncPostgresSaver`
 when `DATABASE_URL` is configured and creates its tables at startup; otherwise it falls back to
 in-memory checkpoints. The local Compose stack runs only the API and PostgreSQL. Checkpoint

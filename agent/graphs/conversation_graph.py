@@ -66,11 +66,18 @@ def _validate_input(state: ConversationState) -> dict[str, Any]:
 
 def build_conversation_graph(checkpointer: Any | None = None):
     workflow = StateGraph(ConversationState)
+    workflow.add_node("budget_gate", check_budget)
     workflow.add_node("validate", _validate_input)
     workflow.add_node("client_liaison", draft_client_response)
     workflow.add_node("approval", _approval)
-    workflow.add_edge(START, "validate")
+    workflow.add_edge(START, "budget_gate")
+    workflow.add_conditional_edges(
+        "budget_gate",
+        budget_route,
+        {"continue": "validate", "attention": END},
+    )
     workflow.add_edge("validate", "client_liaison")
     workflow.add_edge("client_liaison", "approval")
     workflow.add_edge("approval", END)
     return workflow.compile(checkpointer=checkpointer or InMemorySaver())
+from agent.budgets import budget_route, check_budget
