@@ -124,7 +124,7 @@ def test_manifest_rejects_duplicate_sources_and_extra_fields(source):
 
 @pytest.mark.parametrize("filename,content", [
     ("empty.md", b"  "), ("binary.md", b"\xff"), ("large.txt", b"x" * (MAX_FILE_BYTES + 1)),
-    ("not-supported.pdf", b"dummy"),
+    ("invalid.pdf", b"dummy"), ("not-supported.docx", b"dummy"),
 ])
 def test_invalid_files_fail_explicitly(source, filename, content):
     path, manifest = source
@@ -133,6 +133,76 @@ def test_invalid_files_fail_explicitly(source, filename, content):
     path.write_text(json.dumps(manifest))
     with pytest.raises((ValueError, UnicodeDecodeError)):
         build_index(path)
+
+
+def test_pdf_ingestion_preserves_extracted_text_and_provenance(source, make_text_pdf):
+    path, manifest = source
+    (path.parent / "cv.PDF").write_bytes(make_text_pdf(
+        "Synthetic Python engineer.", "Built a fictional analytics dashboard."
+    ))
+    manifest["documents"][0].update(path="cv.PDF", type="cv")
+    path.write_text(json.dumps(manifest))
+    result = build_index(path)
+    assert len(result) == 1
+    assert result[0].content == (
+        "Synthetic Python engineer.\n\nBuilt a fictional analytics dashboard."
+    )
+    assert result[0].type == "cv"
+    assert result[0].data_kind == "synthetic"
+    assert result[0].source == "local-manifest:case-1"
+    assert [item.id for item in result] == [item.id for item in build_index(path)]
+
+
+@pytest.mark.parametrize("pages,encrypted,error", [
+    (("secret",), True, "encrypted PDFs"),
+    ((), False, "no pages"),
+    (("text", ""), False, "page 2 has no extractable text"),
+])
+def test_pdf_rejects_encrypted_empty_or_unextractable_pages(
+    source, make_text_pdf, pages, encrypted, error
+):
+    path, manifest = source
+    (path.parent / "cv.pdf").write_bytes(make_text_pdf(*pages, encrypted=encrypted))
+    manifest["documents"][0]["path"] = "cv.pdf"
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match=error):
+        build_index(path)
+
+
+def test_pdf_limits_are_enforced(source, make_text_pdf, monkeypatch):
+    import rag.ingest.portfolio as ingestion
+
+    path, manifest = source
+    (path.parent / "cv.pdf").write_bytes(make_text_pdf("hello", "world"))
+    manifest["documents"][0]["path"] = "cv.pdf"
+    path.write_text(json.dumps(manifest))
+    monkeypatch.setattr(ingestion, "MAX_PDF_PAGES", 1)
+    with pytest.raises(ValueError, match="page limit"):
+        build_index(path)
+    monkeypatch.setattr(ingestion, "MAX_PDF_PAGES", 2)
+    monkeypatch.setattr(ingestion, "MAX_PDF_TEXT_CHARS", 9)
+    with pytest.raises(ValueError, match="extracted text exceeds"):
+        build_index(path)
+    monkeypatch.setattr(ingestion, "MAX_PDF_TEXT_CHARS", 10)
+    assert len(build_index(path)) == 1
+
+
+def test_failed_pdf_cli_does_not_replace_index(source, make_text_pdf, tmp_path):
+    path, manifest = source
+    output = tmp_path / "index.json"
+    write_index(build_index(path), output)
+    before = output.read_bytes()
+    (tmp_path / "cv.pdf").write_bytes(make_text_pdf("text", ""))
+    manifest["documents"][0]["path"] = "cv.pdf"
+    path.write_text(json.dumps(manifest))
+    run = subprocess.run(
+        [sys.executable, "-m", "rag.ingest.portfolio", str(path),
+         "--output", str(output), "--replace"],
+        capture_output=True, text=True, check=False,
+    )
+    assert run.returncode != 0
+    assert "page 2 has no extractable text" in run.stderr
+    assert output.read_bytes() == before
 
 
 def test_manifest_cannot_escape_source_directory(source, tmp_path):

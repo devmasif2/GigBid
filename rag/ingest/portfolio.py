@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import tempfile
@@ -17,10 +18,14 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 from mcp_servers.portfolio.service import EvidenceItem, EvidenceType
 
 MAX_FILE_BYTES = 2_000_000
+MAX_PDF_PAGES = 100
+MAX_PDF_TEXT_CHARS = 2_000_000
 CHUNK_SIZE = 800
 
 
@@ -92,6 +97,32 @@ def chunks(text: str, max_chars: int = CHUNK_SIZE) -> list[str]:
     return output
 
 
+def extract_pdf_text(raw: bytes, source_id: str) -> str:
+    try:
+        reader = PdfReader(io.BytesIO(raw), strict=True)
+        if reader.is_encrypted:
+            raise ValueError(f"{source_id}: encrypted PDFs are not supported")
+        if not reader.pages:
+            raise ValueError(f"{source_id}: PDF has no pages")
+        if len(reader.pages) > MAX_PDF_PAGES:
+            raise ValueError(f"{source_id}: PDF exceeds page limit ({MAX_PDF_PAGES})")
+        pages = []
+        total_chars = 0
+        for number, page in enumerate(reader.pages, start=1):
+            text = page.extract_text().strip()
+            if not text:
+                raise ValueError(
+                    f"{source_id}: PDF page {number} has no extractable text; OCR is not supported"
+                )
+            total_chars += len(text)
+            if total_chars > MAX_PDF_TEXT_CHARS:
+                raise ValueError(f"{source_id}: PDF extracted text exceeds size limit")
+            pages.append(text)
+        return "\n\n".join(pages)
+    except PdfReadError as exc:
+        raise ValueError(f"{source_id}: invalid or unreadable PDF: {exc}") from exc
+
+
 def build_index(manifest_path: Path, *, output_path: Path | None = None) -> list[EvidenceItem]:
     manifest_path = manifest_path.resolve(strict=True)
     if output_path is not None and output_path.resolve() == manifest_path:
@@ -105,13 +136,17 @@ def build_index(manifest_path: Path, *, output_path: Path | None = None) -> list
             raise ValueError(f"{document.source_id}: source must be a file inside manifest directory")
         if output_path is not None and output_path.resolve() == source:
             raise ValueError("output must differ from every source document")
-        if source.suffix.lower() not in {".md", ".txt"}:
-            raise ValueError(f"{document.source_id}: only .md and .txt files are supported")
+        if source.suffix.lower() not in {".md", ".txt", ".pdf"}:
+            raise ValueError(f"{document.source_id}: only .md, .txt and .pdf files are supported")
         with source.open("rb") as file:
             raw = file.read(MAX_FILE_BYTES + 1)
         if len(raw) > MAX_FILE_BYTES:
             raise ValueError(f"{document.source_id}: source exceeds size limit")
-        text = raw.decode("utf-8")
+        text = (
+            extract_pdf_text(raw, document.source_id)
+            if source.suffix.lower() == ".pdf"
+            else raw.decode("utf-8")
+        )
         parts = chunks(text)
         if not parts:
             raise ValueError(f"{document.source_id}: source is empty")

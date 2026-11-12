@@ -1,7 +1,7 @@
 # Local portfolio ingestion
 
 The local CLI builds a complete Portfolio MCP JSON index from UTF-8 Markdown and text
-documents. Keep documents, manifests and generated indexes in `data/local/` (git-ignored);
+documents and text-based PDFs. Keep documents, manifests and generated indexes in `data/local/` (git-ignored);
 do not commit private portfolios or client material. The CLI runs locally; opt-in model
 retrieval sends indexed text to the configured loopback Ollama service. The API has no
 authentication and must not be exposed publicly.
@@ -31,7 +31,15 @@ Create a folder such as `data/local/my-portfolio/`, put your documents there, an
 ```
 
 Paths are relative to the manifest and must resolve to files within its directory. Supported
-extensions are `.md` and `.txt`; files must be nonempty UTF-8 and at most 2,000,000 bytes.
+extensions are `.md`, `.txt`, and `.pdf`; files must be at most 2,000,000 bytes. Markdown
+and text files must be nonempty UTF-8. PDFs must be unencrypted, contain 1–100 pages, and
+have no more than 2,000,000 extracted text characters. Every PDF page must have extractable
+text; blank or image-only pages fail the whole rebuild, because OCR is not provided.
+PDF text extraction can omit or reorder material even on pages with some text, especially
+tables, columns, images, and unusual fonts. Review the generated index against the original
+before relying on it; evidence quotes refer to extracted text, not verified PDF coordinates.
+Page and text limits are checked during parsing and do not sandbox the parser or bound its peak
+memory or runtime. Process only trusted local files.
 Source IDs use letters, digits, dots, underscores or hyphens and must be unique per freelancer.
 Types are `cv`, `case_study`, `repo_readme`, `code`, `review`, and `proposal`. The optional
 date is ISO 8601 (`YYYY-MM-DD`); project, client industry and outcome are user-provided
@@ -69,6 +77,6 @@ the `local-manifest:<source_id>` provenance label back to its source; the label 
 verified citation or a published link. Changing source ordering, chunk boundaries, or content
 can change IDs; do not treat them as permanent external references.
 
-This is not a PDF parser, GitHub integration, UI upload, automatic rights checker, semantic
+This is not a GitHub integration, UI upload, automatic rights checker, semantic
 chunker, incremental index, vector database, or production-ready multi-user storage. It does
 not perform OCR, redaction, deduplication of document contents, or independent fact checking.

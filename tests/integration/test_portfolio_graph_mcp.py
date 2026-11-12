@@ -41,6 +41,27 @@ async def test_stdio_portfolio_client_retrieves_ingested_chunks(tmp_path):
 
 
 @pytest.mark.anyio
+async def test_stdio_portfolio_client_retrieves_ingested_pdf(tmp_path, make_text_pdf):
+    (tmp_path / "example.pdf").write_bytes(make_text_pdf("Synthetic Python engineer."))
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({
+        "version": 1,
+        "documents": [{
+            "source_id": "pdf-example", "path": "example.pdf", "freelancer_id": "demo",
+            "title": "Fictional CV", "type": "cv", "skills": ["Python"],
+            "data_kind": "synthetic",
+        }],
+    }))
+    output = tmp_path / "portfolio.json"
+    write_index(build_index(manifest, output_path=output), output)
+    results = await retrieve_portfolio_evidence(["Python"], output)
+    item = results[0][0]
+    assert item.content == "Synthetic Python engineer."
+    assert item.source == "local-manifest:pdf-example"
+    assert item.data_kind == "synthetic"
+
+
+@pytest.mark.anyio
 async def test_stdio_portfolio_client_fails_explicitly_for_missing_data(tmp_path):
     with pytest.raises(PortfolioMCPError, match="failed or is unavailable"):
         await retrieve_portfolio_evidence(["Python"], tmp_path / "missing.json")

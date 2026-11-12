@@ -26,8 +26,9 @@ sources containing the explicit word `synthetic` are marked synthetic when no la
 and all other unlabelled
 evidence remains unverified. Only records explicitly marked real can support a bid-path draft.
 
-The optional [local ingestion CLI](../rag/ingest/README.md) writes user-supplied Markdown/text
-and metadata into an ignored local JSON index by default. It requires an explicit rights
+The optional [local ingestion CLI](../rag/ingest/README.md) writes user-supplied Markdown,
+text, extracted PDF text and metadata into an ignored local JSON index by default. PDF extraction
+may be incomplete or reordered and must be reviewed against the original. It requires an explicit rights
 attestation for records declared real. This is a user assertion, not verified evidence of
 ownership, permission, accuracy, or consent; review rights and content before use. Source files,
 manifest, and index can contain private text and should not be committed or deployed publicly.

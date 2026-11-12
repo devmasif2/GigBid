@@ -68,11 +68,12 @@ portfolio relevance. Exact skill matching and the real-evidence gate remain in p
 alone does not verify claims. Each graph retrieval opens a new MCP process, so corpus embeddings
 are rebuilt for each run. There is no persistent vector store or shared index.
 
-An optional local manifest-based ingestion CLI builds a complete JSON index from Markdown and
-text files, preserving declared metadata and content-addressed chunk IDs. It defaults to
+An optional local manifest-based ingestion CLI builds a complete JSON index from Markdown, text,
+and text-based PDF files, preserving declared metadata and content-addressed chunk IDs. It defaults to
 git-ignored local storage and requires a rights attestation for evidence declared real; neither
-the attestation nor the underlying claims are independently verified. It is not a PDF or
-GitHub loader, upload service, or multi-user data store.
+the attestation nor the underlying claims are independently verified. PDF extraction can omit
+or reorder content, has no OCR, and requires review. It is not a GitHub loader, upload service,
+or multi-user data store.
 
 With `GIGBID_PORTFOLIO_RERANK=cross_encoder`, hybrid candidates can be reordered using a
 local Sentence Transformers cross-encoder on CPU. The model path must be a pre-downloaded local
