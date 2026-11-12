@@ -75,6 +75,7 @@ async def _retrieve_once(
 ) -> list[list[EvidenceItem]]:
     require_tool_access(caller, "portfolio", "search_evidence")
     env = os.environ.copy()
+    env.pop("GIGBID_PORTFOLIO_MANAGE_TOKEN", None)
     if portfolio_path is not None:
         env["GIGBID_PORTFOLIO_PATH"] = str(portfolio_path.resolve())
     params = StdioServerParameters(

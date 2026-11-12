@@ -9,6 +9,7 @@ from apps.api.routers import jobs as jobs_router
 from apps.api.routers import messages as messages_router
 from apps.api.routers import pipeline as pipeline_router
 from apps.api.routers import portfolio as portfolio_router
+from apps.api.routers import portfolio_manage as portfolio_manage_router
 
 
 @asynccontextmanager
@@ -35,6 +36,7 @@ app.include_router(jobs_router.router)
 app.include_router(messages_router.router)
 app.include_router(pipeline_router.router)
 app.include_router(portfolio_router.router)
+app.include_router(portfolio_manage_router.router)
 
 
 @app.get("/health", tags=["health"])

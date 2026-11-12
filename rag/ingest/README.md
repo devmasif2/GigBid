@@ -164,6 +164,39 @@ list the entire index or edit data. The API has **no authentication or tenant is
 must remain local; anyone with API access can search private evidence. Rebuilds are full, not
 incremental, and require every selected GitHub file to be accessible again.
 
-Neither loader provides UI upload, automatic rights verification, semantic chunking, incremental
-indexing, a vector database, or production-ready multi-user storage. There is no OCR or automatic
-redaction, deduplication, or independent fact checking.
+## Optional local document manager
+
+The web portfolio panel can add, replace, and delete individual local text, Markdown, or
+text-based PDF sources. Each successful operation updates only that source's chunks in a
+local SQLite store, with the same labels, metadata, chunking, and attestation rules. Search
+reads the SQLite index through Portfolio MCP. Source updates and deletes use revision checks,
+so stale edits are rejected; reselect the file for replacements and refresh after a conflict.
+
+**Local development only.** Management is disabled by default. To enable it, choose an ignored
+SQLite path and a strong local secret (at least 32 characters) in the API process environment:
+
+```bash
+export GIGBID_PORTFOLIO_PATH=data/local/managed-portfolio.sqlite3
+export GIGBID_PORTFOLIO_MANAGE_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+uv run uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+```
+
+In the same terminal, `printf '%s\n' "$GIGBID_PORTFOLIO_MANAGE_TOKEN"` displays the token for
+entry in the web panel. Do not share it, commit it, or put it in a browser URL. It remains in
+page memory only and must be re-entered after refresh. A valid token and a loopback client are
+required for management. These checks are **not multi-user authentication**: a local reverse
+proxy makes remote clients appear local, and the ordinary portfolio search API is unauthenticated.
+Never expose the API or Vite proxy to untrusted users, and do not rely on this on a shared machine.
+
+The database contains unencrypted extracted text and metadata; raw uploads are not retained.
+New database files are created with owner-only permissions; existing file and directory
+permissions are the operator's responsibility. Back up or delete the SQLite database and
+its associated journal files using normal local procedures. Uploads are limited to 2,000,000
+bytes. PDFs use the same no-OCR and extraction-review restrictions described above. Review
+rights, privacy, and extracted text yourself. Deleting a source removes current indexed chunks,
+but does not erase existing graph checkpoints, backups, logs, or operating-system storage.
+
+The SQLite store is **separate** from JSON indexes created by the manifest CLIs: switching
+`GIGBID_PORTFOLIO_PATH` changes the active corpus, and uploads do not import or merge existing
+local or GitHub JSON evidence. GitHub upload, auth/tenant isolation, automatic rights verification,
+vector indexing, OCR and automatic redaction remain unimplemented.

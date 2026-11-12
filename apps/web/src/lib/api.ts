@@ -67,6 +67,54 @@ export interface PortfolioEvidence {
   data_kind: "real" | "synthetic" | "unverified";
 }
 
+export interface PortfolioSource {
+  source_id: string;
+  path: string;
+  freelancer_id: string;
+  title: string;
+  type: PortfolioEvidence["type"];
+  skills: string[];
+  data_kind: PortfolioEvidence["data_kind"];
+  rights_attested: boolean;
+  project: string | null;
+  date: string | null;
+  client_industry: string | null;
+  outcome: string | null;
+  revision: number;
+}
+
+async function portfolioManageRequest<T>(path: string, token: string, body?: unknown): Promise<T> {
+  const response = await fetch(`/api/portfolio/manage${path}`, {
+    method: body === undefined ? "GET" : "POST",
+    headers: {
+      "X-Portfolio-Token": token,
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  if (!response.ok) throw new Error(await errorMessage(response, "Portfolio management failed"));
+  return (await response.json()) as T;
+}
+
+export function listPortfolioSources(token: string): Promise<PortfolioSource[]> {
+  return portfolioManageRequest<PortfolioSource[]>("/sources", token);
+}
+
+export function savePortfolioSource(
+  token: string, document: Omit<PortfolioSource, "revision">, contentBase64: string,
+  expectedRevision?: number,
+): Promise<{ revision: number }> {
+  return portfolioManageRequest("/sources", token, {
+    document, content_base64: contentBase64, expected_revision: expectedRevision ?? null,
+  });
+}
+
+export function deletePortfolioSource(token: string, source: PortfolioSource): Promise<{ deleted: boolean }> {
+  return portfolioManageRequest("/sources/delete", token, {
+    freelancer_id: source.freelancer_id, source_id: source.source_id, expected_revision: source.revision,
+  });
+}
+
 interface StreamFrame {
   event: string;
   data: string;

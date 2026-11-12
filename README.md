@@ -96,7 +96,9 @@ independent verification. Keep private documents and generated indexes out of Gi
 An opt-in GitHub MCP loader also supports selected README and code files at pinned commits;
 its authenticated remote setup has not yet been live-tested. See the same ingestion guide.
 The combined rebuild can preview and combine both source types into one index. The web
-portfolio panel searches the configured index, but is read-only and the API remains unauthenticated.
+portfolio panel searches the configured index. Its opt-in local SQLite manager can add, replace
+and delete individual documents; it is not multi-user authentication, and the API remains
+unsuitable for public deployment. See the [ingestion guide](rag/ingest/README.md) for setup.
 
 ### Synthetic component evaluations
 

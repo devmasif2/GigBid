@@ -80,10 +80,12 @@ class PipelineProposal(BaseModel):
 
 async def _call_tool(caller: str, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
     require_tool_access(caller, "marketplace", tool)
+    env = os.environ.copy()
+    env.pop("GIGBID_PORTFOLIO_MANAGE_TOKEN", None)
     params = StdioServerParameters(
         command=sys.executable,
         args=["-m", "mcp_servers.marketplace.server"],
-        env=os.environ.copy(),
+        env=env,
     )
     try:
         with anyio.fail_after(_TIMEOUT_SECONDS):

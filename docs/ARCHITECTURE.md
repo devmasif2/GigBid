@@ -80,6 +80,14 @@ Portfolio MCP. Indexing is still a full rebuild; there is no UI upload, authenti
 isolation. GitHub authorship is not verified, and authenticated GitHub access has not been
 live-tested. The local API must not be exposed publicly.
 
+An opt-in single-user document manager accepts local text, Markdown, and text-based PDFs and
+stores per-source chunks in SQLite. Creates, replacements, and deletes commit transactionally;
+revision checks reject stale writes. Portfolio MCP reads the SQLite corpus when configured.
+Raw uploads are not retained, but extracted text and metadata are plaintext. This corpus is
+separate from JSON manifest indexes, and uploads do not reindex GitHub sources. Management
+requires a loopback client and a locally configured token; these do not protect unauthenticated
+search or make the application safe to deploy publicly or through an untrusted proxy.
+
 With `GIGBID_PORTFOLIO_RERANK=cross_encoder`, hybrid candidates can be reordered using a
 local Sentence Transformers cross-encoder on CPU. The model path must be a pre-downloaded local
 directory; loading is local-only, custom remote code is disabled, and safetensors weights are

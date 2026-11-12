@@ -176,3 +176,35 @@ async def test_empty_requirements_do_not_start_server(monkeypatch):
 
     assert await mcp_client.retrieve_portfolio_evidence([]) == []
     retrieve.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_portfolio_mcp_does_not_inherit_management_token(monkeypatch):
+    observed = []
+
+    @asynccontextmanager
+    async def fake_stdio(params):
+        observed.append(params.env)
+        yield None, None
+
+    class FakeSession:
+        def __init__(self, _read, _write):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, _exc_type, _exc, _traceback):
+            return False
+
+        async def initialize(self):
+            pass
+
+        async def call_tool(self, _name, _arguments):
+            return CallToolResult(content=[], structuredContent={"result": []})
+
+    monkeypatch.setenv("GIGBID_PORTFOLIO_MANAGE_TOKEN", "test-token")
+    monkeypatch.setattr(mcp_client, "stdio_client", fake_stdio)
+    monkeypatch.setattr(mcp_client, "ClientSession", FakeSession)
+    assert await mcp_client.retrieve_portfolio_evidence(["Python"]) == [[]]
+    assert "GIGBID_PORTFOLIO_MANAGE_TOKEN" not in observed[0]

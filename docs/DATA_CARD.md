@@ -37,6 +37,10 @@ The separate opt-in GitHub MCP loader reads explicitly selected files at pinned 
 preserves GitHub links as provenance. The operator must review repository rights and content;
 the link does not establish authorship or authorization, and the loader does not redact secrets.
 No authenticated live GitHub ingestion has been verified.
+The opt-in local SQLite document manager stores uploaded documents' extracted text and declared
+metadata, but not raw uploaded files. It does not redact sensitive content, independently verify
+rights, isolate tenants, or encrypt data. Deletion affects the current index, not graph checkpoints
+or backups. The managed SQLite corpus is separate from manifest-generated JSON indexes.
 
 ## Candidate external datasets
 

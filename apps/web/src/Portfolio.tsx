@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { searchPortfolio, type PortfolioEvidence } from "./lib/api";
+import PortfolioManager from "./PortfolioManager";
 
 export default function Portfolio() {
   const [query, setQuery] = useState("");
@@ -8,22 +9,29 @@ export default function Portfolio() {
   const [items, setItems] = useState<PortfolioEvidence[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchVersion = useRef(0);
 
   async function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const term = query.trim();
     if (!term || loading) return;
+    const version = ++searchVersion.current;
     setLoading(true);
     setError("");
     setItems([]);
     setSearched("");
     try {
-      setItems(await searchPortfolio(term));
-      setSearched(term);
+      const results = await searchPortfolio(term);
+      if (version === searchVersion.current) {
+        setItems(results);
+        setSearched(term);
+      }
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Portfolio search is unavailable.");
+      if (version === searchVersion.current) {
+        setError(failure instanceof Error ? failure.message : "Portfolio search is unavailable.");
+      }
     } finally {
-      setLoading(false);
+      if (version === searchVersion.current) setLoading(false);
     }
   }
 
@@ -67,6 +75,10 @@ export default function Portfolio() {
           <pre>{item.content}</pre>
         </article>
       ))}
+      <PortfolioManager onChange={() => {
+        searchVersion.current += 1;
+        setItems([]); setSearched(""); setError(""); setLoading(false);
+      }} />
     </section>
   );
 }

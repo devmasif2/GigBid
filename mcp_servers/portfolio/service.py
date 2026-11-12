@@ -58,6 +58,10 @@ class Portfolio:
         self._cached_vectors: list[list[float]] | None = None
 
     def _items(self) -> list[EvidenceItem]:
+        if self.path.suffix.lower() in {".sqlite", ".sqlite3", ".db"}:
+            from rag.ingest.store import read_store_items
+
+            return read_store_items(self.path)
         with self.path.open(encoding="utf-8") as file:
             data = json.load(file)
         return TypeAdapter(list[EvidenceItem]).validate_python(data)
