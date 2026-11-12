@@ -117,9 +117,23 @@ class GigSimMarketplace:
             "POST", "/proposals", body=payload, idempotency_key=idempotency_key
         )
 
+    async def submit_proposal(self, proposal_id: str, idempotency_key: str) -> dict[str, Any]:
+        return await self._request(
+            "POST",
+            f"/proposals/{proposal_id}/confirm",
+            idempotency_key=idempotency_key,
+        )
+
     async def list_messages(self, proposal_id: str | None = None) -> list[dict[str, Any]]:
         params = {"proposal_id": proposal_id} if proposal_id else None
         return await self._request("GET", "/messages", params=params)
+
+    async def send_message(
+        self, payload: dict[str, Any], idempotency_key: str
+    ) -> dict[str, Any]:
+        return await self._request(
+            "POST", "/messages", body=payload, idempotency_key=idempotency_key
+        )
 
     async def get_policy(self) -> dict[str, Any]:
         return await self._request("GET", "/policy")

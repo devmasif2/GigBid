@@ -97,9 +97,21 @@ class LocalSampleMarketplace:
             "proposal writes are disabled in the local sample marketplace"
         )
 
+    async def submit_proposal(self, proposal_id: str, idempotency_key: str) -> dict[str, object]:
+        raise MarketplaceUnavailableError(
+            "proposal submission is disabled in the local sample marketplace"
+        )
+
     async def list_messages(self, proposal_id: str | None = None) -> list[dict[str, object]]:
         raise MarketplaceUnavailableError(
             "messages are not available in the local sample marketplace"
+        )
+
+    async def send_message(
+        self, payload: dict[str, object], idempotency_key: str
+    ) -> dict[str, object]:
+        raise MarketplaceUnavailableError(
+            "message sending is disabled in the local sample marketplace"
         )
 
     async def get_policy(self) -> dict[str, object]:

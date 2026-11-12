@@ -42,8 +42,14 @@ async def test_marketplace_mcp_exposes_read_only_job_tools(tmp_path, monkeypatch
         "list_messages",
         "get_marketplace_policy",
     }
-    assert set(tool_by_name) == read_tools | {"create_proposal_draft"}
+    assert set(tool_by_name) == read_tools | {
+        "create_proposal_draft",
+        "submit_proposal",
+        "send_message",
+    }
     assert all(tool_by_name[name].annotations.readOnlyHint for name in read_tools)
+    assert not tool_by_name["submit_proposal"].annotations.readOnlyHint
+    assert not tool_by_name["send_message"].annotations.readOnlyHint
     assert all(call.isError for call in sample_mode_calls)
     assert tool_by_name["search_jobs"].annotations == ToolAnnotations(readOnlyHint=True)
     assert tool_by_name["get_job"].annotations == ToolAnnotations(readOnlyHint=True)

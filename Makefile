@@ -19,3 +19,8 @@ eval:
 	uv run python -m evals.runners.run_claim_verification_eval --output evals/results/synthetic-claim-verification.json
 	uv run python -m evals.runners.run_prompt_injection_eval --output evals/results/synthetic-prompt-injection.json
 	uv run python -m evals.runners.run_graph_observability_eval --output evals/results/synthetic-graph-observability.json
+	uv run python -m evals.runners.run_assignment_results \
+		--retrieval evals/results/synthetic-retrieval-dev.json \
+		--outcomes evals/results/synthetic-simulator-outcomes.json \
+		--claims evals/results/synthetic-claim-verification.json \
+		--output evals/results/assignment-results-table.md

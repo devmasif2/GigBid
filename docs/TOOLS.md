@@ -20,6 +20,8 @@ GigSim nor a live Upwork adapter. The only write is a proposal draft.
 | `list_messages` | Marketplace (`gigsim` mode only) | Read | `readOnlyHint=true` | Local stdio; no auth |
 | `get_marketplace_policy` | Marketplace (`gigsim` mode only) | Read | `readOnlyHint=true` | Local stdio; no auth |
 | `create_proposal_draft` | Marketplace | Write (draft only) | `readOnlyHint=false`, `destructiveHint=false`, `idempotentHint=true`, `openWorldHint=false` | Local stdio; no auth |
+| `submit_proposal` | Marketplace | Write (Connects spend) | `readOnlyHint=false`, `destructiveHint=false`, `idempotentHint=true`, `openWorldHint=false` | Local stdio; no auth |
+| `send_message` | Marketplace | Write (external message) | `readOnlyHint=false`, `destructiveHint=false`, `idempotentHint=true`, `openWorldHint=false` | Local stdio; no auth |
 | `get_free_slots` | Workspace (local mock) | Read | `readOnlyHint=true` | Local stdio; no auth |
 | `create_tentative_hold` | Workspace (local mock) | Write (mock only) | `readOnlyHint=false`, `destructiveHint=false`, `idempotentHint=true` | Local stdio; no auth |
 | `create_email_draft` | Workspace (local mock) | Write (mock only) | `readOnlyHint=false`, `destructiveHint=false`, `idempotentHint=true` | Local stdio; no auth |
@@ -39,6 +41,15 @@ dispatch, logs denials without arguments, and denies unknown callers and tools. 
 client-side controls for these code paths, not MCP server authentication or an isolation
 boundary against arbitrary Python code. Other agents, resource and prompt access, and future
 integrations still need explicit policies before they are connected.
+
+## Marketplace writes
+
+`submit_proposal` and `send_message` are exposed for the assignment's marketplace contract. Both
+default to `dry_run=true`, carry an idempotency key, record an append-only audit event, and return
+`external_action_taken=false` in preview mode. In GigSim mode, a non-dry-run call maps to the
+simulator's idempotent confirm/message endpoints. The graph currently invokes only
+`create_proposal_draft`; the other writes remain unavailable to the graph until its approval
+payload and conversation resume paths are wired to them.
 
 ## `create_proposal_draft`
 

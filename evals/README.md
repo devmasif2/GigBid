@@ -13,7 +13,8 @@ From the project root, after `uv sync --extra dev`:
 make eval
 ```
 
-This writes seven files under `evals/results/` (ignored by Git):
+This writes the component JSON files and `assignment-results-table.md` under `evals/results/`
+(ignored by Git):
 
 - `synthetic-retrieval-dev.json`: per-query rankings, labels, macro averages, per-persona and
   per-job-type summaries, dataset SHA-256 and single-run latency.
@@ -32,6 +33,9 @@ This writes seven files under `evals/results/` (ignored by Git):
   the current deterministic risk and liaison heuristics.
 - `synthetic-graph-observability.json`: local conversation-graph p50/p95 latency and deterministic
   token estimates. Provider cost is explicitly reported as unavailable.
+- `assignment-results-table.md`: rubric-shaped results table combining the reproducible retrieval,
+  simulator, and claim-verification outputs. Unmeasured judge, human-panel, provider-cost, and
+  variant-outcome fields remain `N/A`.
 
 To select variants, provide a different **synthetic** dataset, or choose output paths:
 

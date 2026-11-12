@@ -218,6 +218,79 @@ async def test_draft_reaches_gigsim_exactly_once_and_dry_run_does_not(gigsim_mcp
     assert all(d["connects_spent"] == 0 for d in drafts)
 
 
+@pytest.mark.anyio
+async def test_submit_and_send_message_are_idempotent_and_dry_run_safe(
+    gigsim_mcp, sim_app, admin
+):
+    job = visible_job(sim_app)
+    async with create_connected_server_and_client_session(gigsim_mcp.mcp) as client:
+        created = await client.call_tool(
+            "create_proposal_draft", draft_args(job, idempotency_key="draft-key-0010")
+        )
+        proposal_id = created.structuredContent["draft"]["idempotency_key"]
+        remote = await remote_drafts(sim_app)
+        proposal_id = remote[0]["proposal_id"]
+        preview = await client.call_tool(
+            "submit_proposal",
+            {
+                "proposal_id": proposal_id,
+                "idempotency_key": "submit-key-0010",
+                "dry_run": True,
+            },
+        )
+        submitted = await client.call_tool(
+            "submit_proposal",
+            {
+                "proposal_id": proposal_id,
+                "idempotency_key": "submit-key-0010",
+                "dry_run": False,
+            },
+        )
+        retry = await client.call_tool(
+            "submit_proposal",
+            {
+                "proposal_id": proposal_id,
+                "idempotency_key": "submit-key-0010",
+                "dry_run": False,
+            },
+        )
+        sim_app.state.sim.account("user-a").proposals[proposal_id]["status"] = "replied"
+        message_preview = await client.call_tool(
+            "send_message",
+            {
+                "proposal_id": proposal_id,
+                "body": "Thanks, I can discuss the first milestone.",
+                "idempotency_key": "message-key-0010",
+                "dry_run": True,
+            },
+        )
+        message = await client.call_tool(
+            "send_message",
+            {
+                "proposal_id": proposal_id,
+                "body": "Thanks, I can discuss the first milestone.",
+                "idempotency_key": "message-key-0010",
+                "dry_run": False,
+            },
+        )
+        message_retry = await client.call_tool(
+            "send_message",
+            {
+                "proposal_id": proposal_id,
+                "body": "Thanks, I can discuss the first milestone.",
+                "idempotency_key": "message-key-0010",
+                "dry_run": False,
+            },
+        )
+
+    assert preview.structuredContent["external_action_taken"] is False
+    assert submitted.structuredContent["external_action_taken"] is True
+    assert retry.structuredContent["connects_spent"] == submitted.structuredContent["connects_spent"]
+    assert message_preview.structuredContent["external_action_taken"] is False
+    assert message.structuredContent["external_action_taken"] is True
+    assert message_retry.structuredContent["message"] == message.structuredContent["message"]
+
+
 def visible_other(sim_app, job):
     return next(
         j

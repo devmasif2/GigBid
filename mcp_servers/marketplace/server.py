@@ -35,6 +35,7 @@ ScreeningAnswers = Annotated[
 Price = Annotated[float, Field(gt=0, le=1_000_000)]
 IdempotencyKey = Annotated[str, Field(min_length=8, max_length=200)]
 TraceId = Annotated[str | None, Field(max_length=100)]
+MessageBody = Annotated[str, Field(min_length=1, max_length=5000)]
 
 
 class SearchJobsInput(BaseModel):
@@ -47,6 +48,26 @@ class GetJobInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     job_id: JobId
+
+
+class SubmitProposalResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dry_run: bool
+    outcome: str
+    proposal_id: str
+    connects_spent: int
+    external_action_taken: bool
+
+
+class SendMessageResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dry_run: bool
+    outcome: str
+    proposal_id: str
+    message: dict[str, Any]
+    external_action_taken: bool
 
 
 @mcp.tool(annotations=READ_ONLY)
@@ -190,6 +211,92 @@ async def create_proposal_draft(
         {"outcome": result.outcome, "dry_run": dry_run},
         trace,
     )
+    return result
+
+
+@mcp.tool(annotations=DRAFT_WRITE)
+async def submit_proposal(
+    proposal_id: Annotated[str, Field(min_length=1, max_length=200)],
+    idempotency_key: IdempotencyKey,
+    dry_run: bool = True,
+    trace_id: TraceId = None,
+) -> SubmitProposalResult:
+    """Submit an existing approved draft; defaults to a no-side-effect preview."""
+    user_id = os.environ.get("GIGBID_USER_ID", "local-user")
+    trace = trace_id or uuid.uuid4().hex
+    arguments = {
+        "proposal_id": proposal_id,
+        "idempotency_key": idempotency_key,
+        "dry_run": dry_run,
+    }
+    store.enforce_rate_limit(user_id, "submit_proposal")
+    if dry_run:
+        result = SubmitProposalResult(
+            dry_run=True,
+            outcome="preview",
+            proposal_id=proposal_id,
+            connects_spent=0,
+            external_action_taken=False,
+        )
+    else:
+        try:
+            submitted = await marketplace.submit_proposal(proposal_id, idempotency_key)
+            result = SubmitProposalResult(
+                dry_run=False,
+                outcome="submitted",
+                proposal_id=proposal_id,
+                connects_spent=int(submitted.get("connects_spent", 0)),
+                external_action_taken=True,
+            )
+        except Exception as error:
+            store.audit(user_id, "submit_proposal", arguments, {"error": str(error)}, trace)
+            raise
+    store.audit(user_id, "submit_proposal", arguments, result.model_dump(), trace)
+    return result
+
+
+@mcp.tool(annotations=DRAFT_WRITE)
+async def send_message(
+    proposal_id: Annotated[str, Field(min_length=1, max_length=200)],
+    body: MessageBody,
+    idempotency_key: IdempotencyKey,
+    dry_run: bool = True,
+    trace_id: TraceId = None,
+) -> SendMessageResult:
+    """Send an approved client message; defaults to a no-side-effect preview."""
+    user_id = os.environ.get("GIGBID_USER_ID", "local-user")
+    trace = trace_id or uuid.uuid4().hex
+    arguments = {
+        "proposal_id": proposal_id,
+        "body_chars": len(body),
+        "idempotency_key": idempotency_key,
+        "dry_run": dry_run,
+    }
+    store.enforce_rate_limit(user_id, "send_message")
+    if dry_run:
+        result = SendMessageResult(
+            dry_run=True,
+            outcome="preview",
+            proposal_id=proposal_id,
+            message={"proposal_id": proposal_id, "body": body},
+            external_action_taken=False,
+        )
+    else:
+        try:
+            message = await marketplace.send_message(
+                {"proposal_id": proposal_id, "body": body}, idempotency_key
+            )
+            result = SendMessageResult(
+                dry_run=False,
+                outcome="sent",
+                proposal_id=proposal_id,
+                message=message,
+                external_action_taken=True,
+            )
+        except Exception as error:
+            store.audit(user_id, "send_message", arguments, {"error": str(error)}, trace)
+            raise
+    store.audit(user_id, "send_message", arguments, result.model_dump(), trace)
     return result
 
 
