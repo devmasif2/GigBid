@@ -24,6 +24,11 @@ class GigBidState(TypedDict, total=False):
     approval_error: str
     draft_publication: dict[str, Any]
     errors: list[str]
+    execution_trace: list[dict[str, Any]]
+    style_memory: list[dict[str, Any]]
+    outcome_memory: list[dict[str, Any]]
+    memory_events: list[dict[str, Any]]
+    edit_count: int
 
 
 class ConversationState(TypedDict, total=False):
@@ -33,3 +38,7 @@ class ConversationState(TypedDict, total=False):
     conversation_draft: dict[str, Any]
     approval_status: str
     approval_error: str
+    execution_trace: list[dict[str, Any]]
+    style_memory: list[dict[str, Any]]
+    outcome_memory: list[dict[str, Any]]
+    memory_events: list[dict[str, Any]]

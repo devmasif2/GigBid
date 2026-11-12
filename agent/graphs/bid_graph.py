@@ -12,6 +12,7 @@ from langgraph.types import Send, interrupt
 from pydantic import ValidationError
 
 from agent import marketplace_mcp_client
+from agent.memory.store import promote_style_memory, trace_event
 from agent.nodes.analyst import analyze_job
 from agent.nodes.claim_sanitizer import sanitize_proposal
 from agent.nodes.claim_verifier import verify_proposal
@@ -70,7 +71,17 @@ def _decision_node(state: GigBidState, minimum_fit_score: float, maximum_risk_sc
     else:
         decision = "bid"
         reason = "Fit and risk thresholds passed with explicitly real portfolio evidence."
-    return {"decision": decision, "decision_reason": reason, "revision_count": 0}
+    return {
+        "decision": decision,
+        "decision_reason": reason,
+        "revision_count": 0,
+        "execution_trace": trace_event(
+            state.get("execution_trace"),
+            node="decide",
+            status="completed",
+            observation=f"decision={decision}",
+        ),
+    }
 
 
 def _route_decision(state: GigBidState) -> str:
@@ -116,6 +127,7 @@ def _approval_payload(state: GigBidState) -> dict[str, Any]:
 def _approval(state: GigBidState) -> dict[str, Any]:
     evidence = state.get("evidence", [])
     updated: dict[str, Any] = {}
+    edit_count = state.get("edit_count", 0)
     response = interrupt(_approval_payload(state))
 
     while isinstance(response, dict) and response.get("action") == "edit":
@@ -124,6 +136,7 @@ def _approval(state: GigBidState) -> dict[str, Any]:
             raise ValueError("edited cover_letter must be a non-empty string")
 
         current_state = {**state, **updated}
+        edit_count += 1
         answers = response.get("screening_answers")
         if answers is None:
             answers = current_state["proposal_draft"].get("screening_answers", [])
@@ -169,7 +182,26 @@ def _approval(state: GigBidState) -> dict[str, Any]:
             "claim_verification_before_sanitization": verification_before_sanitization,
             "critique": critique,
             "compliance_verdict": verdict,
+            "edit_count": edit_count,
         }
+        style_memory, memory_event = promote_style_memory(
+            current_state.get("style_memory"),
+            edited_text=cover_letter,
+            prior_text=current_state["proposal_draft"].get("cover_letter", ""),
+            edit_count=edit_count,
+        )
+        updated["style_memory"] = style_memory
+        if memory_event:
+            updated["memory_events"] = [
+                *current_state.get("memory_events", []),
+                memory_event,
+            ]
+        updated["execution_trace"] = trace_event(
+            current_state.get("execution_trace"),
+            node="approval",
+            status="edited",
+            observation=f"draft edit {edit_count} rechecked",
+        )
         response = interrupt(
             {
                 **_approval_payload({**state, **updated}),

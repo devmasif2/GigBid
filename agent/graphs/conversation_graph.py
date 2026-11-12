@@ -4,6 +4,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
+from agent.memory.store import trace_event
 from agent.nodes.client_liaison import draft_client_response
 from agent.nodes.compliance import prohibited_text_reasons
 from agent.state import ConversationState
@@ -53,7 +54,14 @@ def _approval(state: ConversationState) -> dict[str, Any]:
 def _validate_input(state: ConversationState) -> dict[str, Any]:
     if not state.get("conversation_id") or not state.get("client_message"):
         raise ValueError("conversation graph requires conversation_id and client_message")
-    return {}
+    return {
+        "execution_trace": trace_event(
+            state.get("execution_trace"),
+            node="validate",
+            status="completed",
+            observation="conversation input validated",
+        )
+    }
 
 
 def build_conversation_graph(checkpointer: Any | None = None):

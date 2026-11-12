@@ -139,6 +139,13 @@ recovery and concurrent exactly-once processing have not been verified. No marke
 performed after approval other than creating a local draft (also mirrored to the local simulator
 when configured).
 
+Graph state now keeps three explicit categories separate: current workflow state, an
+`execution_trace` containing redacted node observations, and `style_memory`/`outcome_memory`
+containing only normalized promoted facts. Repeated user edits require three observations before a
+style preference is promoted; raw drafts and tool payloads are never copied into memory. Outcome
+memory accepts only normalized `replied`, `hired`, or `lost` events and is not populated from
+arbitrary client text.
+
 Both graphs and the API accept an injected checkpointer. The API selects `AsyncPostgresSaver`
 when `DATABASE_URL` is configured and creates its tables at startup; otherwise it falls back to
 in-memory checkpoints. The local Compose stack runs only the API and PostgreSQL. Checkpoint
