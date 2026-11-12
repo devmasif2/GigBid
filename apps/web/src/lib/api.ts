@@ -180,7 +180,7 @@ export async function startConversation(
 ): Promise<GraphRunResult> {
   const response = await fetch("/api/graphs/conversation/start", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Trace-Id": threadId },
     body: JSON.stringify({
       thread_id: threadId,
       input: { conversation_id: message.proposal_id, client_message: message.body },
@@ -297,6 +297,8 @@ export async function streamBidAnalysis(
         finalStatus = "interrupted";
       }
       onUpdate(names, update);
+    } else if (frame.event === "trace" && typeof payload === "object" && payload !== null) {
+      combinedState.observability = payload;
     } else if (frame.event === "complete" && typeof payload === "object" && payload !== null) {
       const status = (payload as { status?: string }).status;
       if (status === "interrupted" || status === "completed") finalStatus = status;

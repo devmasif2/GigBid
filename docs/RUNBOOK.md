@@ -62,6 +62,35 @@ quality.
 The browser smoke tests mock the jobs API and cover inbox rendering, job selection, and explicit
 marketplace outage feedback. They do not prove the full approval flow or live API behavior.
 
+## Tracing and usage measurement
+
+Graph start, approval, continue, and SSE endpoints accept an optional `X-Trace-Id` UUID. If
+omitted, the API generates one and returns it in an `observability` object. The frontend uses
+the graph thread UUID as its trace ID and stores the final SSE trace summary in the run state.
+Each graph update records elapsed milliseconds and a deterministic text-token estimate.
+`cost_usd` is explicitly `null` for these local deterministic/model-agnostic paths; no provider
+billing cost is inferred. Token estimates are not provider tokenizer counts.
+
+Example response shape:
+
+```json
+{
+  "observability": {
+    "trace_id": "uuid",
+    "latency_ms": 12.3,
+    "token_estimate": 42,
+    "cost_usd": null,
+    "spans": [{"name": "graph.start", "latency_ms": 12.1, "token_estimate": 42, "cost_usd": null}]
+  }
+}
+```
+
+Use the existing synthetic evaluation reports for component latency. They are local measurements
+and do not establish provider token cost, production p95 budgets, or live marketplace latency.
+`make eval` also runs the graph observability benchmark, which records local conversation-graph
+p50/p95 latency and deterministic token estimates. It intentionally reports provider cost as
+unavailable.
+
 ## Degraded mode and recovery
 
 - Portfolio MCP failure: bid analysis returns an explicit service error; it does not silently

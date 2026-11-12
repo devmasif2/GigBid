@@ -13,7 +13,7 @@ From the project root, after `uv sync --extra dev`:
 make eval
 ```
 
-This writes six files under `evals/results/` (ignored by Git):
+This writes seven files under `evals/results/` (ignored by Git):
 
 - `synthetic-retrieval-dev.json`: per-query rankings, labels, macro averages, per-persona and
   per-job-type summaries, dataset SHA-256 and single-run latency.
@@ -30,6 +30,8 @@ This writes six files under `evals/results/` (ignored by Git):
 - `synthetic-prompt-injection.json`: synthetic attack-success and false-positive rates for job
   and client-message triage. The baseline assumes no detector; the defended result exercises
   the current deterministic risk and liaison heuristics.
+- `synthetic-graph-observability.json`: local conversation-graph p50/p95 latency and deterministic
+  token estimates. Provider cost is explicitly reported as unavailable.
 
 To select variants, provide a different **synthetic** dataset, or choose output paths:
 
@@ -44,6 +46,8 @@ uv run python -m evals.runners.run_claim_verification_eval \
   --output evals/results/claim-verification.json
 uv run python -m evals.runners.run_prompt_injection_eval \
   --output evals/results/prompt-injection.json
+uv run python -m evals.runners.run_graph_observability_eval \
+  --output evals/results/graph-observability.json
 ```
 
 Without `--output`, each command writes JSON to stdout. Invalid datasets and arguments fail
