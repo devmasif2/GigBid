@@ -1,8 +1,11 @@
+import json
+
 import httpx
 import pytest
 
 from agent.mcp_client import PortfolioMCPError, retrieve_portfolio_evidence
 from apps.api.main import app
+from rag.ingest.portfolio import build_index, write_index
 
 
 @pytest.mark.anyio
@@ -12,6 +15,29 @@ async def test_stdio_portfolio_client_preserves_sample_provenance():
     assert results[0][0].id == "evidence-001"
     assert results[0][0].data_kind == "synthetic"
     assert results[1] == []
+
+
+@pytest.mark.anyio
+async def test_stdio_portfolio_client_retrieves_ingested_chunks(tmp_path):
+    (tmp_path / "example.md").write_text("Synthetic Python analytics example.")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({
+        "version": 1,
+        "documents": [{
+            "source_id": "example", "path": "example.md", "freelancer_id": "demo",
+            "title": "Analytics", "type": "case_study", "skills": ["Python"],
+            "data_kind": "synthetic", "client_industry": "retail",
+        }],
+    }))
+    output = tmp_path / "portfolio.json"
+    write_index(build_index(manifest, output_path=output), output)
+    results = await retrieve_portfolio_evidence(["Python"], output)
+    item = results[0][0]
+    assert item.content == "Synthetic Python analytics example."
+    assert item.freelancer_id == "demo"
+    assert item.source == "local-manifest:example"
+    assert item.data_kind == "synthetic"
+    assert item.client_industry == "retail"
 
 
 @pytest.mark.anyio

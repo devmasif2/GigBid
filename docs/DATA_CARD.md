@@ -22,8 +22,16 @@ The starter examples are distinguishable in their content, including the portfol
 `synthetic sample; replace with verified portfolio evidence`. The default Portfolio MCP data path
 uses this synthetic sample only to make local development reproducible.
 Portfolio evidence supports a `data_kind` field (`real`, `synthetic`, or `unverified`); legacy
-sources containing the explicit word `synthetic` are marked synthetic, and all other unlabelled
+sources containing the explicit word `synthetic` are marked synthetic when no label is supplied,
+and all other unlabelled
 evidence remains unverified. Only records explicitly marked real can support a bid-path draft.
+
+The optional [local ingestion CLI](../rag/ingest/README.md) writes user-supplied Markdown/text
+and metadata into an ignored local JSON index by default. It requires an explicit rights
+attestation for records declared real. This is a user assertion, not verified evidence of
+ownership, permission, accuracy, or consent; review rights and content before use. Source files,
+manifest, and index can contain private text and should not be committed or deployed publicly.
+No actual user portfolio is supplied or included in the repository by this feature.
 
 ## Candidate external datasets
 

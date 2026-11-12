@@ -89,7 +89,10 @@ GIGBID_MARKETPLACE_MODE=gigsim GIGSIM_API_TOKEN=gigsim-dev-token \
 Workspace data is in-memory only; no external calendar events are created and no email is
 sent. See [`docs/TOOLS.md`](docs/TOOLS.md) for the current tool inventory and limitations.
 
-Set `GIGBID_PORTFOLIO_PATH` to use a different JSON evidence file.
+Set `GIGBID_PORTFOLIO_PATH` to use a different JSON evidence file. The
+[local ingestion CLI](rag/ingest/README.md) can build one from explicitly labelled Markdown
+and text documents. It requires a rights attestation for material declared real; this is not
+independent verification. Keep private documents and generated indexes out of Git.
 
 ### Synthetic component evaluations
 

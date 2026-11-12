@@ -35,13 +35,14 @@ class EvidenceItem(BaseModel):
     date: Date | None = None
     outcome: str | None = None
     project: str | None = None
+    client_industry: str | None = None
     skills: list[str] = Field(default_factory=list)
     content: str = Field(validation_alias=AliasChoices("content", "summary"))
     data_kind: Literal["real", "synthetic", "unverified"] = "unverified"
 
     @model_validator(mode="after")
     def recognize_labeled_synthetic_source(self) -> "EvidenceItem":
-        if self.data_kind == "unverified" and "synthetic" in self.source.casefold():
+        if "data_kind" not in self.model_fields_set and "synthetic" in self.source.casefold():
             self.data_kind = "synthetic"
         return self
 
