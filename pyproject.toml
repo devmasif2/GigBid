@@ -30,7 +30,7 @@ rerank = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["agent", "apps", "gigsim_local", "mcp_servers", "rag"]
+packages = ["agent", "apps", "gigsim_local", "mcp_servers", "rag", "worker"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

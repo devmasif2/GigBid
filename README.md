@@ -138,3 +138,7 @@ The current build is not deployment-ready: the API has no authentication; databa
 has not been demonstrated; GigSim/Upwork, most frontend screens, corpus ingestion, model-backed RAG
 evaluation, worker scheduling, and remaining submission deliverables are not complete. CI covers
 repeatable local checks only; it does not prove deployment safety or live marketplace behavior.
+
+The local saved-search worker primitive is documented in [`worker/README.md`](worker/README.md).
+It provides SQLite-backed scheduling and idempotent run claims for a future marketplace adapter;
+distributed queue execution and live scouting are not implemented.
