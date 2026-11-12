@@ -8,6 +8,8 @@ import Portfolio from "./Portfolio";
 
 const RUN_STORAGE_KEY = "gigbid.lastBidThread";
 const PROFILE_STORAGE_KEY = "gigbid.profile";
+const ACCOUNT_STORAGE_KEY = "gigbid.account";
+const CONNECTIONS_STORAGE_KEY = "gigbid.connections";
 
 type LoadState = "loading" | "ready" | "error";
 type AnalysisState = {
@@ -57,6 +59,23 @@ export default function App() {
     }
   });
   const [profileDraft, setProfileDraft] = useState(profile);
+  const [account, setAccount] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem(ACCOUNT_STORAGE_KEY) ?? "null") as
+        { email: string; name: string } | null;
+    } catch {
+      return null;
+    }
+  });
+  const [accountDraft, setAccountDraft] = useState({ name: "", email: "" });
+  const [connections, setConnections] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem(CONNECTIONS_STORAGE_KEY) ?? "{}") as
+        { marketplace?: boolean; portfolio?: boolean };
+    } catch {
+      return {};
+    }
+  });
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.job_id === selectedId),
@@ -96,6 +115,25 @@ export default function App() {
     event.preventDefault();
     window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileDraft));
     setProfile(profileDraft);
+  }
+
+  function signIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const next = { name: accountDraft.name.trim(), email: accountDraft.email.trim() };
+    window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(next));
+    setAccount(next);
+  }
+
+  function connectMarketplace() {
+    const next = { ...connections, marketplace: true };
+    window.localStorage.setItem(CONNECTIONS_STORAGE_KEY, JSON.stringify(next));
+    setConnections(next);
+  }
+
+  function connectPortfolio() {
+    const next = { ...connections, portfolio: true };
+    window.localStorage.setItem(CONNECTIONS_STORAGE_KEY, JSON.stringify(next));
+    setConnections(next);
   }
 
   async function analyzeJob() {
@@ -180,7 +218,7 @@ export default function App() {
       <main className="main-content" id="inbox">
         <header className="topbar">
           <div className="breadcrumb">Workspace <span>/</span> Opportunities</div>
-          <div className="profile-chip"><span className="avatar">D</span><span>Demo workspace</span></div>
+          <div className="profile-chip"><span className="avatar">{(account?.name ?? "D").slice(0, 1).toUpperCase()}</span><span>{account?.name ?? "Demo workspace"}</span></div>
         </header>
 
         <section className="page-heading">
@@ -227,6 +265,31 @@ export default function App() {
             <button className="button button-dark" type="submit">{profile.name ? "Save preferences" : "Complete setup"}</button>
           </form>
           <p className="onboarding-note">Marketplace connection: local synthetic mode. OAuth is not enabled in this prototype.</p>
+        </section>
+
+        <section className="account-card" aria-label="Sign in and connections">
+          <div>
+            <div className="eyebrow">ACCOUNT</div>
+            <h2>{account ? `Signed in as ${account.email}` : "Sign in to your workspace"}</h2>
+            <p>Demo authentication keeps each browser workspace separate. No password or secret is stored.</p>
+          </div>
+          {!account ? (
+            <form className="account-form" onSubmit={signIn}>
+              <label>Name<input aria-label="Account name" required value={accountDraft.name} onChange={(event) => setAccountDraft({ ...accountDraft, name: event.target.value })} /></label>
+              <label>Email<input aria-label="Account email" type="email" required value={accountDraft.email} onChange={(event) => setAccountDraft({ ...accountDraft, email: event.target.value })} /></label>
+              <button className="button button-dark" type="submit">Sign in</button>
+            </form>
+          ) : (
+            <div className="connection-actions">
+              <button className="button button-quiet" type="button" onClick={connectMarketplace}>
+                {connections.marketplace ? "GigSim connected" : "Connect GigSim (OAuth demo)"}
+              </button>
+              <button className="button button-quiet" type="button" onClick={connectPortfolio}>
+                {connections.portfolio ? "Portfolio connected" : "Connect portfolio"}
+              </button>
+            </div>
+          )}
+          {account && <p className="onboarding-note">OAuth demo connection is intentionally local and does not issue or store a marketplace token.</p>}
         </section>
 
         {reviewThread && (
@@ -415,6 +478,9 @@ export default function App() {
           <h2>Workspace preferences</h2>
           <p className="muted">Your local profile is stored in this browser only. No credentials are collected.</p>
           <div className="settings-facts">
+            <span>Account <strong>{account?.email ?? "Not signed in"}</strong></span>
+            <span>GigSim <strong>{connections.marketplace ? "Connected" : "Not connected"}</strong></span>
+            <span>Portfolio <strong>{connections.portfolio ? "Connected" : "Not connected"}</strong></span>
             <span>Persona <strong>{profile.persona ?? "Not configured"}</strong></span>
             <span>Rate <strong>{profile.rate ? `$${profile.rate}/hr` : "Not configured"}</strong></span>
             <span>Weekly budget <strong>{profile.budget ? `${profile.budget} Connects` : "Not configured"}</strong></span>

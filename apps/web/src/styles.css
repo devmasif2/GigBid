@@ -68,6 +68,13 @@ h1 { margin: 7px 0 5px; font: 700 27px Manrope, sans-serif; letter-spacing: -0.8
 .settings-panel h2 { margin: 5px 0; font: 700 17px "Avenir Next", Avenir, sans-serif; }
 .settings-facts { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 15px; color: var(--muted); font-size: 11px; }
 .settings-facts strong { display: block; margin-top: 4px; color: var(--ink); font-size: 13px; }
+.account-card { display: grid; gap: 14px; margin-top: 16px; padding: 18px; border: 1px solid #d5e4d8; border-radius: 9px; background: #fff; }
+.account-card h2 { margin: 4px 0; font: 700 17px "Avenir Next", Avenir, sans-serif; }
+.account-card p { margin: 0; color: var(--muted); font-size: 11px; }
+.account-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.account-form label { display: grid; gap: 5px; color: #526158; font-size: 11px; font-weight: 700; }
+.account-form input { min-height: 39px; padding: 0 9px; border: 1px solid #cbd9ce; border-radius: 6px; background: #fff; color: var(--ink); }
+.connection-actions { display: flex; flex-wrap: wrap; gap: 9px; }
 .review-panel { margin-top: 16px; padding: 18px; border: 1px solid #d5e4d8; border-radius: 9px; background: #fff; }
 .review-panel h2 { font: 700 16px "Avenir Next", Avenir, sans-serif; }
 .review-panel textarea { width: 100%; min-height: 180px; padding: 10px; border: 1px solid #cbd9ce; border-radius: 6px; font: inherit; }
@@ -202,6 +209,8 @@ h1 { margin: 7px 0 5px; font: 700 27px Manrope, sans-serif; letter-spacing: -0.8
   .job-list { margin-top: 5px; }
   .onboarding-form { grid-template-columns: 1fr 1fr; }
   .onboarding-form .button { grid-column: 1 / -1; }
+  .account-form { grid-template-columns: 1fr 1fr; }
+  .account-form .button { grid-column: 1 / -1; }
 }
 @media (max-width: 440px) {
   .main-content { padding: 0 12px; }
@@ -213,4 +222,6 @@ h1 { margin: 7px 0 5px; font: 700 27px Manrope, sans-serif; letter-spacing: -0.8
   .page-footer { flex-direction: column; }
   .onboarding-form { grid-template-columns: 1fr; }
   .onboarding-form .button { grid-column: auto; }
+  .account-form { grid-template-columns: 1fr; }
+  .account-form .button { grid-column: auto; }
 }

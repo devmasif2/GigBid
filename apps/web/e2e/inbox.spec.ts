@@ -57,6 +57,7 @@ test("completes local onboarding and shows saved workspace preferences", async (
   await page.route("**/api/jobs*", async (route) => {
     await route.fulfill({ json: [job] });
   });
+
   await page.goto("/");
   const onboarding = page.getByRole("region", { name: "Workspace onboarding" });
   await onboarding.getByLabel("Profile name").fill("Demo freelancer");
@@ -69,6 +70,22 @@ test("completes local onboarding and shows saved workspace preferences", async (
   await expect(settings).toContainText("full_stack");
   await expect(settings).toContainText("$75/hr");
   await expect(settings).toContainText("40 Connects");
+});
+
+test("signs in and connects the local marketplace and portfolio", async ({ page }) => {
+  await page.route("**/api/jobs*", async (route) => {
+    await route.fulfill({ json: [job] });
+  });
+  await page.goto("/");
+  const account = page.getByRole("region", { name: "Sign in and connections" });
+  await account.getByLabel("Account name").fill("Reviewer");
+  await account.getByLabel("Account email").fill("reviewer@example.test");
+  await account.getByRole("button", { name: "Sign in" }).click();
+  await account.getByRole("button", { name: "Connect GigSim (OAuth demo)" }).click();
+  await account.getByRole("button", { name: "Connect portfolio" }).click();
+  await expect(account).toContainText("Signed in as reviewer@example.test");
+  await expect(account).toContainText("GigSim connected");
+  await expect(account).toContainText("Portfolio connected");
 });
 
 test("supports local proposal edit, recheck, and approval", async ({ page }) => {
