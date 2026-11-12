@@ -53,6 +53,31 @@ test("loads the inbox and shows a selected job", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Run job analysis/ })).toBeVisible();
 });
 
+test("shows read-only simulator analytics", async ({ page }) => {
+  await page.route("**/api/jobs*", async (route) => {
+    await route.fulfill({ json: [job] });
+  });
+  await page.route("**/api/pipeline", async (route) => {
+    await route.fulfill({
+      json: {
+        connects_balance: 42,
+        proposals: [
+          { proposal_id: "proposal-1", job_id: job.job_id, status: "hired", price: 350,
+            connects_spent: 8, created_at_hour: 1, updated_at_hour: 2 },
+          { proposal_id: "proposal-2", job_id: job.job_id, status: "draft", price: 300,
+            connects_spent: 0, created_at_hour: 3, updated_at_hour: 3 },
+        ],
+      },
+    });
+  });
+  await page.goto("/");
+  const analytics = page.getByRole("region", { name: "Analytics" });
+  await expect(analytics).toContainText("Tracked proposals2");
+  await expect(analytics).toContainText("Reply rate50%");
+  await expect(analytics).toContainText("Hire rate50%");
+  await expect(analytics).toContainText("42");
+});
+
 test("completes local onboarding and shows saved workspace preferences", async ({ page }) => {
   await page.route("**/api/jobs*", async (route) => {
     await route.fulfill({ json: [job] });

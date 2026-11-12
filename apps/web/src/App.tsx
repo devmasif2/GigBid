@@ -5,6 +5,7 @@ import ProposalReview from "./ProposalReview";
 import Messages from "./Messages";
 import Pipeline from "./Pipeline";
 import Portfolio from "./Portfolio";
+import Analytics from "./Analytics";
 
 const RUN_STORAGE_KEY = "gigbid.lastBidThread";
 const PROFILE_STORAGE_KEY = "gigbid.profile";
@@ -204,6 +205,9 @@ export default function App() {
           </a>
           <a className="nav-item" href="#settings">
             <span className="nav-icon">⚙</span> Settings
+          </a>
+          <a className="nav-item" href="#analytics">
+            <span className="nav-icon">◒</span> Analytics
           </a>
           <span className="nav-item nav-disabled" title="Not implemented yet">
             <span className="nav-icon">◷</span> Agent runs
@@ -471,6 +475,7 @@ export default function App() {
           </section>
         </div>
         <Pipeline />
+        <Analytics />
         <Messages />
         <Portfolio />
         <section className="settings-panel" id="settings" aria-label="Settings">
