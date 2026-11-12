@@ -11,6 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 _ALLOWED_TOOLS = MappingProxyType(
     {
         "fit_matcher": frozenset({("portfolio", "search_evidence")}),
+        "github_ingest": frozenset({("github", "get_file_contents")}),
         "job_inbox": frozenset({("marketplace", "search_jobs"), ("marketplace", "get_job")}),
         "risk_assessor": frozenset({("marketplace", "get_client_history")}),
         "policy_reader": frozenset({("marketplace", "get_marketplace_policy")}),

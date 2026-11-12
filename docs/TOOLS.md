@@ -9,6 +9,7 @@ GigSim nor a live Upwork adapter. The only write is a proposal draft.
 | Name | Server | Access | MCP annotations | Auth |
 |---|---|---|---|---|
 | `search_evidence` | Portfolio | Read | `readOnlyHint=true` | Local stdio; no auth |
+| `get_file_contents` | Official GitHub MCP (opt-in ingestion CLI) | Read | Server advertises read-only | GitHub bearer token in local environment; live auth unverified |
 | `get_case_study` | Portfolio | Read | `readOnlyHint=true` | Local stdio; no auth |
 | `list_skills` | Portfolio | Read | `readOnlyHint=true` | Local stdio; no auth |
 | `search_jobs` | Marketplace | Read | `readOnlyHint=true` | Local stdio; no auth |
@@ -25,7 +26,8 @@ GigSim nor a live Upwork adapter. The only write is a proposal draft.
 
 ## Client tool policy
 
-The integrated callers use a fail-closed allowlist in `agent/tool_policy.py`. The `fit_matcher`
+The integrated callers use a fail-closed allowlist in `agent/tool_policy.py`. The `github_ingest`
+CLI may call only GitHub `get_file_contents` at pinned commits. The `fit_matcher`
 may call only Portfolio `search_evidence`; the job inbox API may call only Marketplace
 `search_jobs` and `get_job`; the risk assessor may call only Marketplace `get_client_history`;
 the policy reader may call only `get_marketplace_policy`; the message inbox may call only
@@ -75,6 +77,10 @@ The only Marketplace write. It never submits a proposal, sends a message, or spe
 
 ## Trust and current limitations
 
+- **GitHub MCP:** GitHub's own server provides repository access using the operator's token;
+  results are untrusted content, not proof of authorship or rights. Only the fixed official
+  HTTPS endpoint is used and only explicitly selected files are requested. The integration
+  is tested against an in-memory MCP test server, not with live GitHub credentials.
 - Portfolio results are read from the configured local JSON file. The default content is synthetic
   starter data and must not be used to claim real freelancer experience.
 - The bid graph calls Portfolio `search_evidence` through a local stdio MCP session; the fit branch

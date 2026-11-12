@@ -33,6 +33,10 @@ attestation for records declared real. This is a user assertion, not verified ev
 ownership, permission, accuracy, or consent; review rights and content before use. Source files,
 manifest, and index can contain private text and should not be committed or deployed publicly.
 No actual user portfolio is supplied or included in the repository by this feature.
+The separate opt-in GitHub MCP loader reads explicitly selected files at pinned commits and
+preserves GitHub links as provenance. The operator must review repository rights and content;
+the link does not establish authorship or authorization, and the loader does not redact secrets.
+No authenticated live GitHub ingestion has been verified.
 
 ## Candidate external datasets
 

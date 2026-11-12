@@ -93,6 +93,8 @@ Set `GIGBID_PORTFOLIO_PATH` to use a different JSON evidence file. The
 [local ingestion CLI](rag/ingest/README.md) can build one from explicitly labelled Markdown,
 text, and text-based PDF documents. It requires a rights attestation for material declared real; this is not
 independent verification. Keep private documents and generated indexes out of Git.
+An opt-in GitHub MCP loader also supports selected README and code files at pinned commits;
+its authenticated remote setup has not yet been live-tested. See the same ingestion guide.
 
 ### Synthetic component evaluations
 

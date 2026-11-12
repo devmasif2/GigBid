@@ -72,7 +72,10 @@ An optional local manifest-based ingestion CLI builds a complete JSON index from
 and text-based PDF files, preserving declared metadata and content-addressed chunk IDs. It defaults to
 git-ignored local storage and requires a rights attestation for evidence declared real; neither
 the attestation nor the underlying claims are independently verified. PDF extraction can omit
-or reorder content, has no OCR, and requires review. It is not a GitHub loader, upload service,
+or reorder content, has no OCR, and requires review. A separate opt-in CLI reads individually
+selected README/code files at pinned commits from the official remote GitHub MCP server, with
+explicit operator labels and rights attestations. It builds a separate full index, does not verify
+authorship, and has not been tested with live credentials. Neither loader is an upload service
 or multi-user data store.
 
 With `GIGBID_PORTFOLIO_RERANK=cross_encoder`, hybrid candidates can be reordered using a

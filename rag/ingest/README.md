@@ -77,6 +77,60 @@ the `local-manifest:<source_id>` provenance label back to its source; the label 
 verified citation or a published link. Changing source ordering, chunk boundaries, or content
 can change IDs; do not treat them as permanent external references.
 
-This is not a GitHub integration, UI upload, automatic rights checker, semantic
-chunker, incremental index, vector database, or production-ready multi-user storage. It does
-not perform OCR, redaction, deduplication of document contents, or independent fact checking.
+## GitHub MCP repository files
+
+The separate GitHub loader reads explicitly selected README or code files through the official
+[GitHub MCP server](https://github.com/github/github-mcp-server). It requires a GitHub token
+authorized for the remote MCP server and the selected repository. Configure a narrowly scoped,
+read-only token locally in `GIGBID_GITHUB_TOKEN`; never paste it into chat, a manifest, or Git.
+The loader sends it only to GitHub's fixed HTTPS MCP repository endpoint, with redirects and
+environment proxies disabled. GitHub may require an eligible account; authorization and
+remote availability depend on its service. Private repository files are returned to this local
+process and written in plaintext to the index. This has not been tested with a live token.
+
+Create a separate manifest in a private, ignored directory:
+
+```json
+{
+  "version": 1,
+  "documents": [{
+    "source_id": "fictional-code",
+    "owner": "example",
+    "repo": "example-project",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "path": "src/example.py",
+    "freelancer_id": "demo-analyst",
+    "title": "Fictional Python example",
+    "type": "code",
+    "skills": ["Python"],
+    "data_kind": "synthetic"
+  }]
+}
+```
+
+Replace the example with an authorized repository and its full 40-character lowercase commit
+SHA. Types are `repo_readme` or `code`; metadata, source IDs, data labels, and `rights_attested`
+follow the same rules as local ingestion. Up to 20 files are selected individually, not crawled.
+The tool accepts embedded text files up to 1,000,000 bytes; directories, binaries, symlinks,
+large-file links, empty files, and unexpected responses fail explicitly. It checks the returned
+Git blob SHA against the text; this checks consistency, not authenticity or ownership. All
+files must succeed before the output is written.
+The entire connection and import has a 30-second deadline; failures are surfaced without
+automatic retries. Retry manually after checking the cause.
+
+```bash
+# Set GIGBID_GITHUB_TOKEN privately in your shell first.
+uv run python -m rag.ingest.github data/local/github-manifest.json \
+  --output data/local/github-portfolio.json
+```
+
+`--replace` is required to overwrite an existing output. This produces a **separate full index**,
+not a merge with your local-document index; point `GIGBID_PORTFOLIO_PATH` to the index you want.
+Each chunk has a commit-pinned GitHub source link, but a repository link does not establish
+authorship, contribution, permission, or factual accuracy. Repository text is untrusted and may
+contain instructions or secrets: review and redact files before indexing. The rights attestation
+is an operator assertion, not a verification. No files are executed.
+
+Neither loader provides UI upload, automatic rights verification, semantic chunking, incremental
+indexing, a vector database, or production-ready multi-user storage. There is no OCR or automatic
+redaction, deduplication, or independent fact checking.

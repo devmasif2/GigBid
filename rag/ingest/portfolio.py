@@ -123,6 +123,33 @@ def extract_pdf_text(raw: bytes, source_id: str) -> str:
         raise ValueError(f"{source_id}: invalid or unreadable PDF: {exc}") from exc
 
 
+def evidence_from_text(document: SourceDocument, text: str, source: str) -> list[EvidenceItem]:
+    parts = chunks(text)
+    if not parts:
+        raise ValueError(f"{document.source_id}: source is empty")
+    source_key = json.dumps(
+        [document.freelancer_id, document.source_id], ensure_ascii=True, separators=(",", ":")
+    )
+    prefix = hashlib.sha256(source_key.encode()).hexdigest()[:24]
+    return [
+        EvidenceItem.model_validate({
+            "id": f"ingest-{prefix}-{index:04d}-{hashlib.sha256(content.encode('utf-8')).hexdigest()[:16]}",
+            "freelancer_id": document.freelancer_id,
+            "title": document.title,
+            "type": document.type,
+            "source": source,
+            "project": document.project,
+            "date": document.date,
+            "client_industry": document.client_industry,
+            "outcome": document.outcome,
+            "skills": document.skills,
+            "content": content,
+            "data_kind": document.data_kind,
+        })
+        for index, content in enumerate(parts, start=1)
+    ]
+
+
 def build_index(manifest_path: Path, *, output_path: Path | None = None) -> list[EvidenceItem]:
     manifest_path = manifest_path.resolve(strict=True)
     if output_path is not None and output_path.resolve() == manifest_path:
@@ -147,29 +174,7 @@ def build_index(manifest_path: Path, *, output_path: Path | None = None) -> list
             if source.suffix.lower() == ".pdf"
             else raw.decode("utf-8")
         )
-        parts = chunks(text)
-        if not parts:
-            raise ValueError(f"{document.source_id}: source is empty")
-        source_key = json.dumps(
-            [document.freelancer_id, document.source_id], ensure_ascii=True, separators=(",", ":")
-        )
-        prefix = hashlib.sha256(source_key.encode()).hexdigest()[:24]
-        for index, content in enumerate(parts, start=1):
-            content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
-            items.append(EvidenceItem.model_validate({
-                "id": f"ingest-{prefix}-{index:04d}-{content_hash}",
-                "freelancer_id": document.freelancer_id,
-                "title": document.title,
-                "type": document.type,
-                "source": f"local-manifest:{document.source_id}",
-                "project": document.project,
-                "date": document.date,
-                "client_industry": document.client_industry,
-                "outcome": document.outcome,
-                "skills": document.skills,
-                "content": content,
-                "data_kind": document.data_kind,
-            }))
+        items.extend(evidence_from_text(document, text, f"local-manifest:{document.source_id}"))
     ids = [item.id for item in items]
     if len(set(ids)) != len(ids):
         raise ValueError("generated evidence IDs are not unique")
