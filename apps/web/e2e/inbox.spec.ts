@@ -42,6 +42,7 @@ test("loads the inbox and shows a selected job", async ({ page }) => {
   await page.route("**/api/jobs*", async (route) => {
     await route.fulfill({ json: [job] });
   });
+
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Opportunity inbox" })).toBeVisible();
   const listing = page.getByRole("button", { name: /Build a customer churn prediction baseline/ });
@@ -50,6 +51,24 @@ test("loads the inbox and shows a selected job", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Selected job details" })
     .getByRole("heading", { name: job.title })).toBeVisible();
   await expect(page.getByRole("button", { name: /Run job analysis/ })).toBeVisible();
+});
+
+test("completes local onboarding and shows saved workspace preferences", async ({ page }) => {
+  await page.route("**/api/jobs*", async (route) => {
+    await route.fulfill({ json: [job] });
+  });
+  await page.goto("/");
+  const onboarding = page.getByRole("region", { name: "Workspace onboarding" });
+  await onboarding.getByLabel("Profile name").fill("Demo freelancer");
+  await onboarding.getByLabel("Profile persona").selectOption("full_stack");
+  await onboarding.getByLabel("Hourly rate").fill("75");
+  await onboarding.getByLabel("Weekly Connects budget").fill("40");
+  await onboarding.getByRole("button", { name: "Complete setup" }).click();
+  await expect(onboarding).toContainText("Welcome back, Demo freelancer");
+  const settings = page.getByRole("region", { name: "Settings" });
+  await expect(settings).toContainText("full_stack");
+  await expect(settings).toContainText("$75/hr");
+  await expect(settings).toContainText("40 Connects");
 });
 
 test("supports local proposal edit, recheck, and approval", async ({ page }) => {

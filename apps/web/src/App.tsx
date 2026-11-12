@@ -7,6 +7,7 @@ import Pipeline from "./Pipeline";
 import Portfolio from "./Portfolio";
 
 const RUN_STORAGE_KEY = "gigbid.lastBidThread";
+const PROFILE_STORAGE_KEY = "gigbid.profile";
 
 type LoadState = "loading" | "ready" | "error";
 type AnalysisState = {
@@ -46,6 +47,16 @@ export default function App() {
     () => window.localStorage.getItem(RUN_STORAGE_KEY),
   );
   const [reviewRevision, setReviewRevision] = useState(0);
+  const [profile, setProfile] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem(PROFILE_STORAGE_KEY) ?? "{}") as {
+        name?: string; persona?: string; rate?: string; budget?: string;
+      };
+    } catch {
+      return {};
+    }
+  });
+  const [profileDraft, setProfileDraft] = useState(profile);
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.job_id === selectedId),
@@ -79,6 +90,12 @@ export default function App() {
     event.preventDefault();
     setActiveQuery(queryInput.trim());
     void loadJobs(queryInput.trim());
+  }
+
+  function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileDraft));
+    setProfile(profileDraft);
   }
 
   async function analyzeJob() {
@@ -147,6 +164,9 @@ export default function App() {
           <a className="nav-item" href="#portfolio">
             <span className="nav-icon">▤</span> Portfolio evidence
           </a>
+          <a className="nav-item" href="#settings">
+            <span className="nav-icon">⚙</span> Settings
+          </a>
           <span className="nav-item nav-disabled" title="Not implemented yet">
             <span className="nav-icon">◷</span> Agent runs
           </span>
@@ -176,6 +196,38 @@ export default function App() {
           <span className="banner-symbol">i</span>
           <span><strong>Local demo mode.</strong> These sample jobs are synthetic, not live marketplace listings.</span>
         </div>
+
+        <section className="onboarding-card" aria-label="Workspace onboarding">
+          <div>
+            <div className="eyebrow">WORKSPACE SETUP</div>
+            <h2>{profile.name ? `Welcome back, ${profile.name}` : "Set up your freelancer profile"}</h2>
+            <p>Choose a persona and preferences before reviewing synthetic opportunities.</p>
+          </div>
+          <form className="onboarding-form" onSubmit={saveProfile}>
+            <label>
+              Name
+              <input aria-label="Profile name" required value={profileDraft.name ?? ""} onChange={(event) => setProfileDraft({ ...profileDraft, name: event.target.value })} />
+            </label>
+            <label>
+              Persona
+              <select aria-label="Profile persona" value={profileDraft.persona ?? "ai_ml"} onChange={(event) => setProfileDraft({ ...profileDraft, persona: event.target.value })}>
+                <option value="ai_ml">AI / ML engineer</option>
+                <option value="full_stack">Full-stack developer</option>
+                <option value="data">Data specialist</option>
+              </select>
+            </label>
+            <label>
+              Hourly rate (USD)
+              <input aria-label="Hourly rate" inputMode="decimal" value={profileDraft.rate ?? ""} onChange={(event) => setProfileDraft({ ...profileDraft, rate: event.target.value })} />
+            </label>
+            <label>
+              Weekly Connects budget
+              <input aria-label="Weekly Connects budget" inputMode="numeric" value={profileDraft.budget ?? ""} onChange={(event) => setProfileDraft({ ...profileDraft, budget: event.target.value })} />
+            </label>
+            <button className="button button-dark" type="submit">{profile.name ? "Save preferences" : "Complete setup"}</button>
+          </form>
+          <p className="onboarding-note">Marketplace connection: local synthetic mode. OAuth is not enabled in this prototype.</p>
+        </section>
 
         {reviewThread && (
           <ProposalReview
@@ -358,6 +410,16 @@ export default function App() {
         <Pipeline />
         <Messages />
         <Portfolio />
+        <section className="settings-panel" id="settings" aria-label="Settings">
+          <div className="eyebrow">SETTINGS</div>
+          <h2>Workspace preferences</h2>
+          <p className="muted">Your local profile is stored in this browser only. No credentials are collected.</p>
+          <div className="settings-facts">
+            <span>Persona <strong>{profile.persona ?? "Not configured"}</strong></span>
+            <span>Rate <strong>{profile.rate ? `$${profile.rate}/hr` : "Not configured"}</strong></span>
+            <span>Weekly budget <strong>{profile.budget ? `${profile.budget} Connects` : "Not configured"}</strong></span>
+          </div>
+        </section>
         <footer className="page-footer"><span>GigBid · Human-approved freelancer copilot</span><span>Prototype · No messages or proposals are sent</span></footer>
       </main>
     </div>
