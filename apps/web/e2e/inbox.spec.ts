@@ -16,6 +16,28 @@ const job = {
   data_kind: "synthetic",
 };
 
+const proposalPayload = (coverLetter: string, editValidation?: Record<string, unknown>) => ({
+  job,
+  proposal_draft: {
+    cover_letter: coverLetter,
+    screening_answers: [],
+    evidence_ids: ["case-1"],
+  },
+  evidence: [{ id: "case-1", content: "Built a Python classification baseline." }],
+  risk_report: { score: 0.1, flags: [] },
+  claim_verification: [{ claim: "Built a Python classification baseline.", status: "supported" }],
+  dry_run: { action: "create_proposal_draft", price: 350, connects_cost: 8, external_action_taken: false },
+  ...(editValidation && { edit_validation: editValidation }),
+});
+
+function interruptedRun(coverLetter = '[case-1] "Built a Python classification baseline."') {
+  return {
+    status: "interrupted",
+    state: { compliance_verdict: { passed: true, reasons: [] } },
+    interrupts: [proposalPayload(coverLetter)],
+  };
+}
+
 test("loads the inbox and shows a selected job", async ({ page }) => {
   await page.route("**/api/jobs*", async (route) => {
     await route.fulfill({ json: [job] });
@@ -28,6 +50,90 @@ test("loads the inbox and shows a selected job", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Selected job details" })
     .getByRole("heading", { name: job.title })).toBeVisible();
   await expect(page.getByRole("button", { name: /Run job analysis/ })).toBeVisible();
+});
+
+test("supports local proposal edit, recheck, and approval", async ({ page }) => {
+  let coverLetter = '[case-1] "Built a Python classification baseline."';
+  await page.route("**/api/jobs*", async (route) => {
+    await route.fulfill({ json: [job] });
+  });
+  await page.route("**/api/pipeline", async (route) => {
+    await route.fulfill({ json: { connects_balance: 100, proposals: [] } });
+  });
+  await page.route("**/api/messages", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+  await page.route("**/api/graphs/bid/review-thread", async (route) => {
+    await route.fulfill({ json: interruptedRun(coverLetter) });
+  });
+  await page.route("**/api/graphs/bid/review-thread/approval", async (route) => {
+    const body = JSON.parse(await route.request().postData() ?? "{}") as { action?: string; cover_letter?: string };
+    if (body.action === "edit") {
+      coverLetter = body.cover_letter ?? coverLetter;
+      await route.fulfill({
+        json: {
+          ...interruptedRun(coverLetter),
+          interrupts: [proposalPayload(coverLetter, { passed: true, reasons: [] })],
+        },
+      });
+      return;
+    }
+    await route.fulfill({
+      json: {
+        status: "completed",
+        state: {
+          approval_status: "approved",
+          draft_publication: {
+            outcome: "created",
+            draft: { job_id: job.job_id },
+          },
+        },
+        interrupts: [],
+      },
+    });
+  });
+  await page.addInitScript(() => window.localStorage.setItem("gigbid.lastBidThread", "review-thread"));
+  await page.goto("/");
+
+  const review = page.getByRole("region", { name: "Proposal review" });
+  await expect(review.getByRole("heading", { name: "Proposal review" })).toBeVisible();
+  await expect(review.getByText("Dry-run preview: create_proposal_draft")).toBeVisible();
+  await review.locator("summary").click();
+  await expect(review.getByText(/case-1: Built a Python classification baseline\./)).toBeVisible();
+  const draft = review.locator("#proposal-draft");
+  await draft.fill("I have ten years of experience.");
+  await review.getByRole("button", { name: "Save and recheck" }).click();
+  await expect(review.getByText("Edit validation: passed.")).toBeVisible();
+  await review.getByRole("button", { name: "Approve locally" }).click();
+  await expect(review).toContainText("Local draft saved");
+  await expect(review).toContainText("not submitted");
+});
+
+test("supports rejecting a proposal locally", async ({ page }) => {
+  await page.route("**/api/jobs*", async (route) => {
+    await route.fulfill({ json: [job] });
+  });
+  await page.route("**/api/pipeline", async (route) => {
+    await route.fulfill({ json: { connects_balance: 100, proposals: [] } });
+  });
+  await page.route("**/api/messages", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+  await page.route("**/api/graphs/bid/reject-thread", async (route) => {
+    await route.fulfill({ json: interruptedRun() });
+  });
+  await page.route("**/api/graphs/bid/reject-thread/approval", async (route) => {
+    await route.fulfill({
+      json: { status: "completed", state: { approval_status: "rejected" }, interrupts: [] },
+    });
+  });
+  await page.addInitScript(() => window.localStorage.setItem("gigbid.lastBidThread", "reject-thread"));
+  await page.goto("/");
+
+  const review = page.getByRole("region", { name: "Proposal review" });
+  await expect(review.getByRole("button", { name: "Reject" })).toBeVisible();
+  await review.getByRole("button", { name: "Reject" }).click();
+  await expect(review).toContainText("Review status: rejected");
 });
 
 test("shows an explicit marketplace outage state", async ({ page }) => {
