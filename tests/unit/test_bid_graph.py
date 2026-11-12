@@ -174,6 +174,30 @@ def test_bid_graph_sanitizes_and_rechecks_user_edits_before_second_approval(real
     assert "ten years" not in call["cover_letter"]
 
 
+def test_bid_graph_does_not_publish_modified_evidence_quote(real_portfolio, publisher):
+    graph = build_bid_graph(portfolio=real_portfolio, draft_publisher=publisher)
+    config = {"configurable": {"thread_id": "modified-evidence"}}
+    graph.invoke({"job": _job()}, config=config)
+    quote = "Built a Python classification baseline and reported precision and recall."
+    waiting = graph.invoke(
+        Command(resume={
+            "action": "edit",
+            "cover_letter": (
+                f'[case-python] "{quote}"\n'
+                '[case-python] "Built a Python classification baseline for 500 clients."'
+            ),
+        }),
+        config=config,
+    )
+    payload = waiting["__interrupt__"][0].value
+    assert payload["edit_validation"]["passed"] is True
+    assert payload["proposal_draft"]["cover_letter"] == f'[case-python] "{quote}"'
+    assert all(check["status"] == "supported" for check in payload["claim_verification"])
+    result = graph.invoke(Command(resume={"action": "approve"}), config=config)
+    assert result["approval_status"] == "approved"
+    assert "500 clients" not in publisher.calls[0]["cover_letter"]
+
+
 def test_bid_graph_does_not_accept_edit_when_sanitization_leaves_no_evidence(real_portfolio, publisher):
     graph = build_bid_graph(portfolio=real_portfolio, draft_publisher=publisher)
     config = {"configurable": {"thread_id": "invalid-edit"}}

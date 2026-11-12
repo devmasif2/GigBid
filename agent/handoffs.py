@@ -40,6 +40,7 @@ class ClaimCheck(BaseModel):
     evidence_ids: list[str] = Field(default_factory=list)
     status: str
     explanation: str
+    source_lines: list[int] = Field(default_factory=list)
 
 
 class Critique(BaseModel):

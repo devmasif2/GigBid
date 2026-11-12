@@ -16,3 +16,4 @@ eval:
 	uv run python -m evals.runners.run_demo_eval --output evals/results/synthetic-retrieval-dev.json --table-output evals/results/synthetic-retrieval-table.md
 	uv run python -m evals.runners.run_simulator_risk_eval --output evals/results/synthetic-simulator-risk.json
 	uv run python -m evals.runners.run_simulator_outcomes --output evals/results/synthetic-simulator-outcomes.json
+	uv run python -m evals.runners.run_claim_verification_eval --output evals/results/synthetic-claim-verification.json

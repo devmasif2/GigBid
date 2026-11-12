@@ -102,10 +102,12 @@ unsuitable for public deployment. See the [ingestion guide](rag/ingest/README.md
 
 ### Synthetic component evaluations
 
-Run `make eval` to regenerate synthetic retrieval, simulator risk and isolated simulator outcome reports in
-`evals/results/`. These are small, local component smoke tests, not the required full benchmark,
-real-world outcomes, or the instructor's hidden test. See [`evals/README.md`](evals/README.md) for
-metrics, data provenance, variant configurations and limitations.
+Run `make eval` to regenerate synthetic retrieval, simulator risk, isolated simulator outcome, and
+claim-verification reports in `evals/results/`. These are small, local component smoke tests, not
+the required full benchmark, real-world outcomes, or the instructor's hidden test. CI runs the
+backend tests, Ruff, frontend build, and this evaluation command. See
+[`evals/README.md`](evals/README.md) for metrics, data provenance, variant configurations and
+limitations.
 
 ### Web interface
 
@@ -134,4 +136,5 @@ See the local assignment brief and progress checklist in `local_docs/` (these fi
 
 The current build is not deployment-ready: the API has no authentication; database crash/resume
 has not been demonstrated; GigSim/Upwork, most frontend screens, corpus ingestion, model-backed RAG
-evaluation, CI gates, worker scheduling, and remaining submission deliverables are not complete.
+evaluation, worker scheduling, and remaining submission deliverables are not complete. CI covers
+repeatable local checks only; it does not prove deployment safety or live marketplace behavior.

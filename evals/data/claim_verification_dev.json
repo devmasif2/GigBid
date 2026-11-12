@@ -1,0 +1,55 @@
+{
+  "name": "synthetic_claim_verification_dev",
+  "version": "1",
+  "data_kind": "synthetic",
+  "cases": [
+    {
+      "id": "ml-mixed",
+      "persona": "ml",
+      "evidence": [
+        {"id": "ml-case", "content": "Built a Python classification baseline and reported precision and recall."}
+      ],
+      "draft": "I have ten years of machine learning experience.\n[ml-case] \"Built a Python classification baseline and reported precision and recall.\""
+    },
+    {
+      "id": "ml-altered-quote",
+      "persona": "ml",
+      "evidence": [
+        {"id": "ml-case", "content": "Built a Python classification baseline and reported precision and recall."}
+      ],
+      "draft": "[ml-case] \"Built a Python classification baseline for 500 clients.\"\nI would welcome a discussion."
+    },
+    {
+      "id": "web-mixed",
+      "persona": "web",
+      "evidence": [
+        {"id": "web-case", "content": "Created a responsive React dashboard with accessible navigation."}
+      ],
+      "draft": "Our team has shipped hundreds of dashboards.\n[web-case] \"Created a responsive React dashboard with accessible navigation.\""
+    },
+    {
+      "id": "web-unknown",
+      "persona": "web",
+      "evidence": [
+        {"id": "web-case", "content": "Created a responsive React dashboard with accessible navigation."}
+      ],
+      "draft": "[missing] \"Won every client project.\"\n[web-case] \"Created a responsive React dashboard with accessible navigation.\""
+    },
+    {
+      "id": "data-clean",
+      "persona": "data",
+      "evidence": [
+        {"id": "data-case", "content": "Designed a reproducible data quality pipeline with scheduled reports."}
+      ],
+      "draft": "I would be glad to discuss the reporting requirements.\n[data-case] \"Designed a reproducible data quality pipeline with scheduled reports.\""
+    },
+    {
+      "id": "data-uncited",
+      "persona": "data",
+      "evidence": [
+        {"id": "data-case", "content": "Designed a reproducible data quality pipeline with scheduled reports."}
+      ],
+      "draft": "My background includes large-scale data engineering and ten years of experience."
+    }
+  ]
+}

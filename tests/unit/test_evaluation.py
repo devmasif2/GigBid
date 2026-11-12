@@ -7,6 +7,11 @@ import sys
 import pytest
 from pydantic import ValidationError
 
+from evals.runners.run_claim_verification_eval import (
+    DEFAULT_DATASET as CLAIM_DATASET,
+)
+from evals.runners.run_claim_verification_eval import Dataset as ClaimDataset
+from evals.runners.run_claim_verification_eval import evaluate as evaluate_claims
 from evals.runners.run_demo_eval import (
     DEFAULT_DATASET,
     VARIANTS,
@@ -155,3 +160,26 @@ def test_risk_cli_and_output_collision(tmp_path):
     )
     assert collision.returncode != 0
     assert output.read_text() == before
+
+
+def test_claim_evaluation_reports_sanitization_effect_by_persona():
+    raw = CLAIM_DATASET.read_bytes()
+    dataset = ClaimDataset.model_validate_json(raw)
+    result = evaluate_claims(dataset, hashlib.sha256(raw).hexdigest())
+
+    assert result["dataset"]["case_count"] == 6
+    assert result["overall"]["before"]["unsupported_claims_per_proposal"] > 0
+    assert result["overall"]["after"]["unsupported_claims_per_proposal"] == 0
+    assert set(result["by_persona"]) == {"data", "ml", "web"}
+    assert all(case["after"]["unsupported_claims"] == 0 for case in result["cases"])
+
+
+def test_claim_dataset_rejects_non_synthetic_or_duplicate_cases():
+    data = json.loads(CLAIM_DATASET.read_text(encoding="utf-8"))
+    data["data_kind"] = "real"
+    with pytest.raises(ValidationError, match="synthetic"):
+        ClaimDataset.model_validate(data)
+    data["data_kind"] = "synthetic"
+    data["cases"].append(data["cases"][0])
+    with pytest.raises(ValidationError, match="unique"):
+        ClaimDataset.model_validate(data)

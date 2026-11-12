@@ -40,7 +40,11 @@ the current listing and reads public client history through Marketplace MCP; unv
 low hire rate, and low rating add explicit heuristic flags. These scores are not calibrated
 probabilities. Sample mode has no client history and reports that limitation. The fit matcher compares required skill labels with retrieved portfolio evidence and
 returns evidence IDs. Proposal text quotes exact evidence snippets, the verifier checks citations,
-and the sanitizer removes unsupported claims before the Critic.
+and the sanitizer removes identified unsupported lines before the Critic. Verification records
+the source line for each detected claim so a modified or malformed quotation is actually removed,
+even when another quote uses the same evidence ID. This is a conservative line-based heuristic,
+not complete claim splitting or semantic fact verification; it can miss unsupported statements
+and exact quotations do not prove truth, authorship, or rights. Human review remains essential.
 
 The bid graph's fit branch launches the local Portfolio MCP server over stdio and calls only
 `search_evidence`, once per required skill. It validates returned evidence and preserves its

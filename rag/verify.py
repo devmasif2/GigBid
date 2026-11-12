@@ -5,8 +5,12 @@ from agent.handoffs import ClaimCheck
 
 _CITATION = re.compile(r'^\[(?P<id>[^\]]+)\]\s+"(?P<claim>.*)"$')
 _FIRST_PERSON_FACT = re.compile(
-    r"\b(?:I|we)\s+(?:am|was|have|had|built|created|developed|led|worked|"
-    r"delivered|achieved|managed|implemented)\b",
+    r"\b(?:(?:I|we)(?:\s+|['’](?:ve|m|re)\s+)"
+    r"(?:am|are|was|were|have|had|built|created|developed|led|worked|"
+    r"delivered|achieved|managed|implemented|designed|shipped|completed|"
+    r"helped|served|speciali[sz]e|experience|expertise|years)\b"
+    r"|(?:my|our)\s+(?:experience|expertise|background|portfolio|clients|projects)\b"
+    r"|(?:my|our)\s+team\s+(?:has|have|had|built|created|developed|delivered|shipped))",
     re.IGNORECASE,
 )
 
@@ -29,7 +33,8 @@ def verify_claims(
     }
     results: list[ClaimCheck] = []
 
-    for line in draft.splitlines():
+    lines = draft.splitlines()
+    for line_number, line in enumerate(lines):
         citation = _CITATION.fullmatch(line.strip())
         if citation is not None:
             evidence_id = citation.group("id")
@@ -38,7 +43,7 @@ def verify_claims(
             if expected is None:
                 status = "unsupported"
                 explanation = "Citation does not refer to retrieved evidence."
-            elif claim == expected:
+            elif expected and claim == expected:
                 status = "supported"
                 explanation = "Quoted text exactly matches retrieved evidence."
             else:
@@ -50,14 +55,20 @@ def verify_claims(
                     evidence_ids=[evidence_id],
                     status=status,
                     explanation=explanation,
+                    source_lines=[line_number],
                 )
             )
-        elif _FIRST_PERSON_FACT.search(line):
+        elif line.lstrip().startswith("[") or _FIRST_PERSON_FACT.search(line):
             results.append(
                 ClaimCheck(
                     claim=line.strip(),
                     status="unsupported",
-                    explanation="First-person experience claim has no evidence citation.",
+                    explanation=(
+                        "Citation must be an exact evidence quote on its own line."
+                        if line.lstrip().startswith("[")
+                        else "First-person experience claim has no evidence citation."
+                    ),
+                    source_lines=[line_number],
                 )
             )
 
@@ -67,6 +78,7 @@ def verify_claims(
                 claim=draft.strip(),
                 status="unsupported",
                 explanation="Draft contains no verifiable evidence citation.",
+                source_lines=list(range(len(lines))),
             )
         )
     return [result.model_dump(mode="json") for result in results]
