@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  getConversationRun, getMessages, reviewConversation, startConversation,
+  getConversationRun, getMessages, reviewConversation, streamConversation,
   type GraphRunResult, type MarketplaceMessage,
 } from "./lib/api";
 
@@ -20,6 +20,7 @@ export default function Messages() {
   const [thread, setThread] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
   const [run, setRun] = useState<GraphRunResult>();
   const [reply, setReply] = useState("");
+  const [nodes, setNodes] = useState<string[]>([]);
   const locallyStartedThread = useRef<string | null>(null);
 
   const applyRun = useCallback((value: GraphRunResult) => {
@@ -61,7 +62,10 @@ export default function Messages() {
     setError("");
     const id = crypto.randomUUID();
     try {
-      const result = await startConversation(id, message);
+      setNodes([]);
+      const result = await streamConversation(id, message, (names) => {
+        setNodes((current) => [...current, ...names]);
+      });
       localStorage.setItem(STORAGE_KEY, id);
       locallyStartedThread.current = id;
       setThread(id);
@@ -91,6 +95,7 @@ export default function Messages() {
   const flags = Array.isArray(draft?.risk_flags) ? draft.risk_flags : [];
   const validation = record(payload?.edit_validation);
   const unsaved = typeof draft?.message === "string" && reply !== draft.message;
+  const traceId = record(run?.state.observability)?.trace_id;
 
   return (
     <section className="review-panel" id="messages" aria-label="Simulator messages">
@@ -106,6 +111,14 @@ export default function Messages() {
       {thread && (
         <div className="signal-box" aria-live="polite">
           <strong>Reply review</strong>
+          {nodes.length > 0 && (
+            <div className="node-list" aria-label="Conversation run viewer">
+              {nodes.map((node, index) => <span className="node-chip" key={`${node}-${index}`}>{node.replaceAll("_", " ")}</span>)}
+            </div>
+          )}
+          {typeof traceId === "string" && (
+            <p className="muted">Trace: {traceId}</p>
+          )}
           {typeof run?.state.client_message === "string" && (
             <p style={{ whiteSpace: "pre-wrap" }}>Client message: {run.state.client_message}</p>
           )}

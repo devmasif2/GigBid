@@ -190,6 +190,76 @@ export async function startConversation(
   return (await response.json()) as GraphRunResult;
 }
 
+export async function streamConversation(
+  threadId: string,
+  message: MarketplaceMessage,
+  onUpdate: (nodeNames: string[], update: GraphState) => void,
+): Promise<GraphRunResult> {
+  const response = await fetch("/api/graphs/conversation/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Trace-Id": threadId },
+    body: JSON.stringify({
+      thread_id: threadId,
+      input: { conversation_id: message.proposal_id, client_message: message.body },
+    }),
+  });
+  if (!response.ok || !response.body) {
+    throw new Error(await errorMessage(response, "Conversation stream failed"));
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalStatus: GraphRunResult["status"] | undefined;
+  const combinedState: GraphState = {};
+  const interrupts: unknown[] = [];
+
+  const handleFrame = (rawFrame: string) => {
+    const frame = parseFrame(rawFrame);
+    if (!frame) return;
+    const payload: unknown = JSON.parse(frame.data);
+    if (frame.event === "error") {
+      const detail = typeof payload === "object" && payload !== null && "detail" in payload
+        ? String(payload.detail) : "Conversation stream failed.";
+      throw new Error(detail);
+    }
+    if (frame.event === "update" && typeof payload === "object" && payload !== null) {
+      const update = payload as GraphState;
+      for (const value of Object.values(update)) {
+        if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+          Object.assign(combinedState, value);
+        }
+      }
+      if ("__interrupt__" in update) {
+        const interrupt = update.__interrupt__;
+        if (Array.isArray(interrupt)) interrupts.push(...interrupt);
+        else interrupts.push(interrupt);
+        finalStatus = "interrupted";
+      }
+      onUpdate(Object.keys(update), update);
+    } else if (frame.event === "trace" && typeof payload === "object" && payload !== null) {
+      combinedState.observability = payload;
+    } else if (frame.event === "complete" && typeof payload === "object" && payload !== null) {
+      const status = (payload as { status?: string }).status;
+      if (status === "interrupted" || status === "completed") finalStatus = status;
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done }).replace(/\r\n/g, "\n");
+    let separator = buffer.indexOf("\n\n");
+    while (separator !== -1) {
+      handleFrame(buffer.slice(0, separator));
+      buffer = buffer.slice(separator + 2);
+      separator = buffer.indexOf("\n\n");
+    }
+    if (done) break;
+  }
+  if (buffer.trim()) handleFrame(buffer);
+  if (!finalStatus) throw new Error("Conversation stream ended before completion.");
+  return { status: finalStatus, state: combinedState, interrupts };
+}
+
 export async function reviewConversation(
   threadId: string, action: "approve" | "reject" | "edit", message?: string,
 ): Promise<GraphRunResult> {

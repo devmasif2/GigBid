@@ -88,6 +88,47 @@ test("signs in and connects the local marketplace and portfolio", async ({ page 
   await expect(account).toContainText("Portfolio connected");
 });
 
+test("streams a conversation reply into the approval review", async ({ page }) => {
+  await page.route("**/api/jobs*", async (route) => {
+    await route.fulfill({ json: [job] });
+  });
+  await page.route("**/api/messages", async (route) => {
+    await route.fulfill({
+      json: [{
+        message_id: "message-1",
+        proposal_id: "proposal-1",
+        job_id: job.job_id,
+        sender: "client",
+        body: "Can you clarify the first milestone?",
+        sent_at_hour: 2,
+      }],
+    });
+  });
+  await page.route("**/api/graphs/conversation/stream", async (route) => {
+    const interrupt = {
+      conversation_id: "proposal-1",
+      draft: { message: "I can clarify the first milestone and validation plan.", intent: "question", risk_flags: [] },
+      external_action_taken: false,
+    };
+    await route.fulfill({
+      contentType: "text/event-stream",
+      body: [
+        'event: update\ndata: {"client_liaison":{"conversation_draft":' +
+          JSON.stringify(interrupt.draft) + "}}\n\n",
+        `event: update\ndata: ${JSON.stringify({ __interrupt__: [interrupt] })}\n\n`,
+        'event: complete\ndata: {"status":"interrupted"}\n\n',
+        'event: trace\ndata: {"trace_id":"trace-conversation-1"}\n\n',
+      ].join(""),
+    });
+  });
+  await page.goto("/");
+  const messages = page.getByRole("region", { name: "Simulator messages" });
+  await messages.getByRole("button", { name: "Draft reply for review" }).click();
+  await expect(messages).toContainText("client liaison");
+  await expect(messages.getByLabel("Reply draft")).toHaveValue("I can clarify the first milestone and validation plan.");
+  await expect(messages).toContainText("trace-conversation-1");
+});
+
 test("supports local proposal edit, recheck, and approval", async ({ page }) => {
   let coverLetter = '[case-1] "Built a Python classification baseline."';
   await page.route("**/api/jobs*", async (route) => {
