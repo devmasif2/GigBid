@@ -30,8 +30,17 @@ docker compose -f infra/docker-compose.yml up --build
 ```
 
 The current repository has configuration and tests for the PostgreSQL checkpointer, but
-crash/restart recovery has not been demonstrated. Do not describe this as production-ready
-durability or exactly-once external submission.
+the optional integration test demonstrates checkpoint survival across two checkpointer
+instances when PostgreSQL is available:
+
+```bash
+DATABASE_URL=postgresql://gigbid:gigbid@127.0.0.1:5432/gigbid \
+  uv run --locked pytest -q tests/integration/test_postgres_checkpoint_recovery.py
+```
+
+This proves persisted approval state across checkpointer recreation, not process-kill recovery,
+multi-user isolation, or exactly-once external submission. Do not describe it as production-ready
+durability.
 
 ## Evaluation and CI
 

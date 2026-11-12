@@ -17,3 +17,4 @@ eval:
 	uv run python -m evals.runners.run_simulator_risk_eval --output evals/results/synthetic-simulator-risk.json
 	uv run python -m evals.runners.run_simulator_outcomes --output evals/results/synthetic-simulator-outcomes.json
 	uv run python -m evals.runners.run_claim_verification_eval --output evals/results/synthetic-claim-verification.json
+	uv run python -m evals.runners.run_prompt_injection_eval --output evals/results/synthetic-prompt-injection.json

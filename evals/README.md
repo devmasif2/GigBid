@@ -13,7 +13,7 @@ From the project root, after `uv sync --extra dev`:
 make eval
 ```
 
-This writes five files under `evals/results/` (ignored by Git):
+This writes six files under `evals/results/` (ignored by Git):
 
 - `synthetic-retrieval-dev.json`: per-query rankings, labels, macro averages, per-persona and
   per-job-type summaries, dataset SHA-256 and single-run latency.
@@ -27,6 +27,9 @@ This writes five files under `evals/results/` (ignored by Git):
   before and after the deterministic sanitizer. This is a self-evaluation of the heuristic
   checker, not semantic entailment or independent truth verification. Its claim counts use
   `require_citation=False` so harmless closing prose is not counted as a whole-draft claim.
+- `synthetic-prompt-injection.json`: synthetic attack-success and false-positive rates for job
+  and client-message triage. The baseline assumes no detector; the defended result exercises
+  the current deterministic risk and liaison heuristics.
 
 To select variants, provide a different **synthetic** dataset, or choose output paths:
 
@@ -39,6 +42,8 @@ uv run python -m evals.runners.run_simulator_outcomes --seed 2026 --jobs 150 --c
   --selected 100 --output evals/results/outcomes.json
 uv run python -m evals.runners.run_claim_verification_eval \
   --output evals/results/claim-verification.json
+uv run python -m evals.runners.run_prompt_injection_eval \
+  --output evals/results/prompt-injection.json
 ```
 
 Without `--output`, each command writes JSON to stdout. Invalid datasets and arguments fail
