@@ -74,9 +74,11 @@ git-ignored local storage and requires a rights attestation for evidence declare
 the attestation nor the underlying claims are independently verified. PDF extraction can omit
 or reorder content, has no OCR, and requires review. A separate opt-in CLI reads individually
 selected README/code files at pinned commits from the official remote GitHub MCP server, with
-explicit operator labels and rights attestations. It builds a separate full index, does not verify
-authorship, and has not been tested with live credentials. Neither loader is an upload service
-or multi-user data store.
+explicit operator labels and rights attestations. A combined CLI can preview and rebuild a single
+index from both manifests, and a read-only API/web panel searches the configured index through
+Portfolio MCP. Indexing is still a full rebuild; there is no UI upload, authentication or tenant
+isolation. GitHub authorship is not verified, and authenticated GitHub access has not been
+live-tested. The local API must not be exposed publicly.
 
 With `GIGBID_PORTFOLIO_RERANK=cross_encoder`, hybrid candidates can be reordered using a
 local Sentence Transformers cross-encoder on CPU. The model path must be a pre-downloaded local

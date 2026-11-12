@@ -5,7 +5,7 @@ import os
 import sys
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 import anyio
 from mcp import ClientSession, StdioServerParameters
@@ -56,13 +56,14 @@ async def retry_transport(
 
 
 async def retrieve_portfolio_evidence(
-    requirements: list[str], portfolio_path: Path | None = None
+    requirements: list[str], portfolio_path: Path | None = None, *,
+    caller: Literal["fit_matcher", "portfolio_viewer"] = "fit_matcher",
 ) -> list[list[EvidenceItem]]:
     if not requirements:
         return []
 
     return await retry_transport(
-        lambda: _retrieve_once(requirements, portfolio_path),
+        lambda: _retrieve_once(requirements, portfolio_path, caller),
         PortfolioMCPTransportError,
         PortfolioMCPError,
         "Portfolio",
@@ -70,9 +71,9 @@ async def retrieve_portfolio_evidence(
 
 
 async def _retrieve_once(
-    requirements: list[str], portfolio_path: Path | None
+    requirements: list[str], portfolio_path: Path | None, caller: str
 ) -> list[list[EvidenceItem]]:
-    require_tool_access("fit_matcher", "portfolio", "search_evidence")
+    require_tool_access(caller, "portfolio", "search_evidence")
     env = os.environ.copy()
     if portfolio_path is not None:
         env["GIGBID_PORTFOLIO_PATH"] = str(portfolio_path.resolve())
@@ -95,7 +96,7 @@ async def _retrieve_once(
                     for requirement in requirements:
                         response = await call_allowed_tool(
                             session,
-                            caller="fit_matcher",
+                            caller=caller,
                             server="portfolio",
                             tool="search_evidence",
                             arguments={"requirement": requirement, "k": 5},

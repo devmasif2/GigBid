@@ -154,8 +154,13 @@ def build_index(manifest_path: Path, *, output_path: Path | None = None) -> list
     manifest_path = manifest_path.resolve(strict=True)
     if output_path is not None and output_path.resolve() == manifest_path:
         raise ValueError("output must differ from manifest")
-    root = manifest_path.parent
     manifest = Manifest.model_validate_json(manifest_path.read_bytes())
+    return build_local_index(manifest, manifest_path.parent, output_path=output_path)
+
+
+def build_local_index(
+    manifest: Manifest, root: Path, *, output_path: Path | None = None
+) -> list[EvidenceItem]:
     items = []
     for document in manifest.documents:
         source = (root / document.path).resolve(strict=True)

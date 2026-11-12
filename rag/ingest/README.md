@@ -124,12 +124,45 @@ uv run python -m rag.ingest.github data/local/github-manifest.json \
   --output data/local/github-portfolio.json
 ```
 
-`--replace` is required to overwrite an existing output. This produces a **separate full index**,
-not a merge with your local-document index; point `GIGBID_PORTFOLIO_PATH` to the index you want.
+`--replace` is required to overwrite an existing output. This command produces a **separate full
+index**; use the combined rebuild below to search both local and GitHub evidence together.
 Each chunk has a commit-pinned GitHub source link, but a repository link does not establish
 authorship, contribution, permission, or factual accuracy. Repository text is untrusted and may
 contain instructions or secrets: review and redact files before indexing. The rights attestation
 is an operator assertion, not a verification. No files are executed.
+
+## Combined index and preview
+
+The combined command takes either or both existing manifest formats and builds one complete
+Portfolio MCP index. Source IDs must be unique per freelancer **across both manifests**.
+Local paths still resolve relative to the local manifest, and GitHub access still requires
+the token. If any input is invalid, missing, or unavailable, no index is written.
+
+```bash
+uv run python -m rag.ingest.combined \
+  --local data/local/my-portfolio/manifest.json \
+  --github data/local/github-manifest.json \
+  --output data/local/portfolio.json --preview
+
+# After reviewing the preview, build (use --replace only for an existing index).
+uv run python -m rag.ingest.combined \
+  --local data/local/my-portfolio/manifest.json \
+  --github data/local/github-manifest.json \
+  --output data/local/portfolio.json --replace
+```
+
+Omit either `--local` or `--github` to build from just that source. Preview fetches and validates
+all sources but never writes an index; it compares against the chosen output, or an empty index
+if it does not exist. Counts show added and removed chunk IDs, metadata-updated chunks with
+the same IDs, and unchanged chunks. Editing text may appear as both an addition and a removal.
+Malformed existing indexes or duplicate IDs fail rather than being ignored. Review the content,
+not just the counts. Preview does not guarantee a later rebuild will use unchanged files.
+
+The API reads the index selected by `GIGBID_PORTFOLIO_PATH`; its read-only portfolio search
+and web panel show up to five matched chunks and their declared provenance. Search does not
+list the entire index or edit data. The API has **no authentication or tenant isolation** and
+must remain local; anyone with API access can search private evidence. Rebuilds are full, not
+incremental, and require every selected GitHub file to be accessible again.
 
 Neither loader provides UI upload, automatic rights verification, semantic chunking, incremental
 indexing, a vector database, or production-ready multi-user storage. There is no OCR or automatic

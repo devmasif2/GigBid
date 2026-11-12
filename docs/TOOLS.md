@@ -29,7 +29,8 @@ GigSim nor a live Upwork adapter. The only write is a proposal draft.
 The integrated callers use a fail-closed allowlist in `agent/tool_policy.py`. The `github_ingest`
 CLI may call only GitHub `get_file_contents` at pinned commits. The `fit_matcher`
 may call only Portfolio `search_evidence`; the job inbox API may call only Marketplace
-`search_jobs` and `get_job`; the risk assessor may call only Marketplace `get_client_history`;
+`search_jobs` and `get_job`; the portfolio viewer may call only Portfolio `search_evidence`;
+the risk assessor may call only Marketplace `get_client_history`;
 the policy reader may call only `get_marketplace_policy`; the message inbox may call only
 `list_messages`; the pipeline viewer may call only `list_proposals` and `get_connects_balance`;
 and the post-approval `proposal_publisher`

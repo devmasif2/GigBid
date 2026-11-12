@@ -62,6 +62,47 @@ async def test_stdio_portfolio_client_retrieves_ingested_pdf(tmp_path, make_text
 
 
 @pytest.mark.anyio
+async def test_portfolio_search_api_uses_configured_index(tmp_path, monkeypatch):
+    (tmp_path / "example.md").write_text("Synthetic Python analytics example.")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({
+        "version": 1,
+        "documents": [{
+            "source_id": "example", "path": "example.md", "freelancer_id": "demo",
+            "title": "Analytics", "type": "case_study", "skills": ["Python"],
+            "data_kind": "synthetic",
+        }],
+    }))
+    output = tmp_path / "portfolio.json"
+    write_index(build_index(manifest, output_path=output), output)
+    monkeypatch.setenv("GIGBID_PORTFOLIO_PATH", str(output))
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get("/portfolio/search", params={"query": "Python"})
+        empty = await client.get("/portfolio/search", params={"query": "unmatched-xyz"})
+        blank = await client.get("/portfolio/search", params={"query": "   "})
+        oversized = await client.get("/portfolio/search", params={"query": "a" * 501})
+    assert response.status_code == 200
+    assert response.json()[0]["content"] == "Synthetic Python analytics example."
+    assert response.json()[0]["data_kind"] == "synthetic"
+    assert empty.status_code == 200 and empty.json() == []
+    assert blank.status_code == 422
+    assert oversized.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_portfolio_search_api_reports_unavailable_index(tmp_path, monkeypatch):
+    monkeypatch.setenv("GIGBID_PORTFOLIO_PATH", str(tmp_path / "missing.json"))
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get("/portfolio/search", params={"query": "Python"})
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Portfolio search is unavailable."
+
+
+@pytest.mark.anyio
 async def test_stdio_portfolio_client_fails_explicitly_for_missing_data(tmp_path):
     with pytest.raises(PortfolioMCPError, match="failed or is unavailable"):
         await retrieve_portfolio_evidence(["Python"], tmp_path / "missing.json")

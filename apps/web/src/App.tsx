@@ -4,6 +4,7 @@ import { getJobs, streamBidAnalysis, type GraphState, type SampleJob } from "./l
 import ProposalReview from "./ProposalReview";
 import Messages from "./Messages";
 import Pipeline from "./Pipeline";
+import Portfolio from "./Portfolio";
 
 const RUN_STORAGE_KEY = "gigbid.lastBidThread";
 
@@ -142,6 +143,9 @@ export default function App() {
           </a>
           <a className="nav-item" href="#messages">
             <span className="nav-icon">☷</span> Messages
+          </a>
+          <a className="nav-item" href="#portfolio">
+            <span className="nav-icon">▤</span> Portfolio evidence
           </a>
           <span className="nav-item nav-disabled" title="Not implemented yet">
             <span className="nav-icon">◷</span> Agent runs
@@ -353,6 +357,7 @@ export default function App() {
         </div>
         <Pipeline />
         <Messages />
+        <Portfolio />
         <footer className="page-footer"><span>GigBid · Human-approved freelancer copilot</span><span>Prototype · No messages or proposals are sent</span></footer>
       </main>
     </div>

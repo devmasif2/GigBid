@@ -26,6 +26,8 @@ from agent.tool_policy import ToolAccessDenied, call_allowed_tool, require_tool_
         ("pipeline_viewer", "marketplace", "create_proposal_draft"),
         ("pipeline_viewer", "marketplace", "send_message"),
         ("pipeline_viewer", "marketplace", "confirm_proposal"),
+        ("portfolio_viewer", "portfolio", "get_case_study"),
+        ("portfolio_viewer", "marketplace", "create_proposal_draft"),
         ("job_inbox", "workspace", "create_email_draft"),
         ("unknown", "portfolio", "search_evidence"),
         ("", "marketplace", "get_job"),
@@ -55,6 +57,7 @@ async def test_denied_tool_never_reaches_session():
     ("caller", "server", "tool"),
     [
         ("fit_matcher", "portfolio", "search_evidence"),
+        ("portfolio_viewer", "portfolio", "search_evidence"),
         ("job_inbox", "marketplace", "search_jobs"),
         ("job_inbox", "marketplace", "get_job"),
         ("proposal_publisher", "marketplace", "create_proposal_draft"),

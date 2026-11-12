@@ -52,6 +52,21 @@ export interface PipelineSnapshot {
   proposals: PipelineProposal[];
 }
 
+export interface PortfolioEvidence {
+  id: string;
+  freelancer_id: string | null;
+  title: string;
+  type: "cv" | "case_study" | "repo_readme" | "code" | "review" | "proposal";
+  source: string;
+  date: string | null;
+  outcome: string | null;
+  project: string | null;
+  client_industry: string | null;
+  skills: string[];
+  content: string;
+  data_kind: "real" | "synthetic" | "unverified";
+}
+
 interface StreamFrame {
   event: string;
   data: string;
@@ -99,6 +114,13 @@ export function getMessages(): Promise<MarketplaceMessage[]> {
 
 export function getPipeline(): Promise<PipelineSnapshot> {
   return requestJson<PipelineSnapshot>("/pipeline");
+}
+
+export async function searchPortfolio(query: string): Promise<PortfolioEvidence[]> {
+  const params = new URLSearchParams({ query });
+  const response = await fetch(`/api/portfolio/search?${params}`);
+  if (!response.ok) throw new Error(await errorMessage(response, "Portfolio search failed"));
+  return (await response.json()) as PortfolioEvidence[];
 }
 
 export function getConversationRun(threadId: string): Promise<GraphRunResult> {

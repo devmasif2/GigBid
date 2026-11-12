@@ -95,6 +95,8 @@ text, and text-based PDF documents. It requires a rights attestation for materia
 independent verification. Keep private documents and generated indexes out of Git.
 An opt-in GitHub MCP loader also supports selected README and code files at pinned commits;
 its authenticated remote setup has not yet been live-tested. See the same ingestion guide.
+The combined rebuild can preview and combine both source types into one index. The web
+portfolio panel searches the configured index, but is read-only and the API remains unauthenticated.
 
 ### Synthetic component evaluations
 
