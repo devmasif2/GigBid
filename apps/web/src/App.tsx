@@ -234,10 +234,6 @@ export default function App() {
           <div className="sample-pill"><span /> SYNTHETIC SAMPLE DATA</div>
         </section>
 
-        <div className="degraded-banner" role="status">
-          <span className="banner-symbol">i</span>
-        </div>
-
         <section className="onboarding-card" aria-label="Workspace onboarding">
           <div>
             <div className="eyebrow">WORKSPACE SETUP</div>
