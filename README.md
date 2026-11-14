@@ -2,6 +2,9 @@
 
 GigBid is a human-approved freelancer copilot for finding jobs, assessing fit and risk, grounding proposals in portfolio evidence, and managing client conversations.
 
+For a quick review, start with the [reviewer guide](docs/REVIEWER_GUIDE.md), [three-minute demo
+walkthrough](docs/DEMO_WALKTHROUGH.md), and [technical write-up](docs/TECHNICAL_WRITEUP.md).
+
 ## Development status
 
 The project includes Portfolio, local Marketplace, and local Workspace MCP servers; deterministic
@@ -135,9 +138,9 @@ claims. Approving a bid creates one idempotent local draft in a SQLite file
 See the local assignment brief and progress checklist in `local_docs/` (these files are intentionally git-ignored). Dataset source and handling notes are in [`docs/DATA_CARD.md`](docs/DATA_CARD.md).
 
 The current build is not deployment-ready: the API has no authentication; database crash/resume
-has not been demonstrated; GigSim/Upwork, most frontend screens, corpus ingestion, model-backed RAG
-evaluation, worker scheduling, and remaining submission deliverables are not complete. CI covers
-repeatable local checks only; it does not prove deployment safety or live marketplace behavior.
+has not been demonstrated; GigSim/Upwork, secure multi-user auth, corpus ingestion, model-backed
+RAG calibration, distributed workers, and public deployment are not complete. CI covers repeatable
+local checks only; it does not prove deployment safety or live marketplace behavior.
 
 The local saved-search worker primitive is documented in [`worker/README.md`](worker/README.md).
 It provides SQLite-backed scheduling and idempotent run claims for a future marketplace adapter;
