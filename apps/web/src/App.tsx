@@ -236,7 +236,6 @@ export default function App() {
 
         <div className="degraded-banner" role="status">
           <span className="banner-symbol">i</span>
-          <span><strong>Workspace mode.</strong> These jobs are synthetic marketplace fixtures.</span>
         </div>
 
         <section className="onboarding-card" aria-label="Workspace onboarding">
