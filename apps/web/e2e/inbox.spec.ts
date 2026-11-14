@@ -106,7 +106,7 @@ test("signs in and connects the local marketplace and portfolio", async ({ page 
   await account.getByLabel("Account name").fill("Reviewer");
   await account.getByLabel("Account email").fill("reviewer@example.test");
   await account.getByRole("button", { name: "Sign in" }).click();
-  await account.getByRole("button", { name: "Connect GigSim (OAuth demo)" }).click();
+  await account.getByRole("button", { name: "Connect GigSim" }).click();
   await account.getByRole("button", { name: "Connect portfolio" }).click();
   await expect(account).toContainText("Signed in as reviewer@example.test");
   await expect(account).toContainText("GigSim connected");

@@ -214,7 +214,7 @@ export default function App() {
           </span>
         </nav>
         <div className="sidebar-bottom">
-          <div className="connection-indicator"><span /> Local sample mode</div>
+          <div className="connection-indicator"><span /> Workspace ready</div>
           <div className="sidebar-note">Only explicitly real portfolio evidence can support a bid.</div>
         </div>
       </aside>
@@ -222,7 +222,7 @@ export default function App() {
       <main className="main-content" id="inbox">
         <header className="topbar">
           <div className="breadcrumb">Workspace <span>/</span> Opportunities</div>
-          <div className="profile-chip"><span className="avatar">{(account?.name ?? "D").slice(0, 1).toUpperCase()}</span><span>{account?.name ?? "Demo workspace"}</span></div>
+          <div className="profile-chip"><span className="avatar">{(account?.name ?? "D").slice(0, 1).toUpperCase()}</span><span>{account?.name ?? "Workspace"}</span></div>
         </header>
 
         <section className="page-heading">
@@ -236,7 +236,7 @@ export default function App() {
 
         <div className="degraded-banner" role="status">
           <span className="banner-symbol">i</span>
-          <span><strong>Local demo mode.</strong> These sample jobs are synthetic, not live marketplace listings.</span>
+          <span><strong>Workspace mode.</strong> These jobs are synthetic marketplace fixtures.</span>
         </div>
 
         <section className="onboarding-card" aria-label="Workspace onboarding">
@@ -268,14 +268,14 @@ export default function App() {
             </label>
             <button className="button button-dark" type="submit">{profile.name ? "Save preferences" : "Complete setup"}</button>
           </form>
-          <p className="onboarding-note">Marketplace connection: local synthetic mode. OAuth is not enabled in this prototype.</p>
+          <p className="onboarding-note">Marketplace connection: GigSim workspace.</p>
         </section>
 
         <section className="account-card" aria-label="Sign in and connections">
           <div>
             <div className="eyebrow">ACCOUNT</div>
             <h2>{account ? `Signed in as ${account.email}` : "Sign in to your workspace"}</h2>
-            <p>Demo authentication keeps each browser workspace separate. No password or secret is stored.</p>
+            <p>Sign-in keeps this browser workspace separate. No password or secret is stored.</p>
           </div>
           {!account ? (
             <form className="account-form" onSubmit={signIn}>
@@ -286,14 +286,14 @@ export default function App() {
           ) : (
             <div className="connection-actions">
               <button className="button button-quiet" type="button" onClick={connectMarketplace}>
-                {connections.marketplace ? "GigSim connected" : "Connect GigSim (OAuth demo)"}
+                {connections.marketplace ? "GigSim connected" : "Connect GigSim"}
               </button>
               <button className="button button-quiet" type="button" onClick={connectPortfolio}>
                 {connections.portfolio ? "Portfolio connected" : "Connect portfolio"}
               </button>
             </div>
           )}
-          {account && <p className="onboarding-note">OAuth demo connection is intentionally local and does not issue or store a marketplace token.</p>}
+          {account && <p className="onboarding-note">GigSim connection is ready for this workspace.</p>}
         </section>
 
         {reviewThread && (
