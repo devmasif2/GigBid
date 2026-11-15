@@ -22,6 +22,8 @@ npm run dev
 
 Open the Vite URL, normally `http://127.0.0.1:5173`.
 
+For Railway deployment, follow [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md).
+
 ## Optional simulator mode
 
 For simulator messages and pipeline data, run:

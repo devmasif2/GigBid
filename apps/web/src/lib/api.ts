@@ -18,6 +18,12 @@ export interface SampleJob {
   data_kind: "synthetic";
 }
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+
+function apiUrl(path: string): string {
+  return `${API_BASE_URL}/api${path}`;
+}
+
 export type GraphState = Record<string, unknown>;
 
 export interface GraphRunResult {
@@ -84,7 +90,7 @@ export interface PortfolioSource {
 }
 
 async function portfolioManageRequest<T>(path: string, token: string, body?: unknown): Promise<T> {
-  const response = await fetch(`/api/portfolio/manage${path}`, {
+  const response = await fetch(apiUrl(`/portfolio/manage${path}`), {
     method: body === undefined ? "GET" : "POST",
     headers: {
       "X-Portfolio-Token": token,
@@ -132,7 +138,7 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
 }
 
 async function requestJson<T>(path: string): Promise<T> {
-  const response = await fetch(`/api${path}`);
+  const response = await fetch(apiUrl(path));
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || `Request failed (${response.status})`);
@@ -166,7 +172,7 @@ export function getPipeline(): Promise<PipelineSnapshot> {
 
 export async function searchPortfolio(query: string): Promise<PortfolioEvidence[]> {
   const params = new URLSearchParams({ query });
-  const response = await fetch(`/api/portfolio/search?${params}`);
+  const response = await fetch(`${apiUrl("/portfolio/search")}?${params}`);
   if (!response.ok) throw new Error(await errorMessage(response, "Portfolio search failed"));
   return (await response.json()) as PortfolioEvidence[];
 }
@@ -178,7 +184,7 @@ export function getConversationRun(threadId: string): Promise<GraphRunResult> {
 export async function startConversation(
   threadId: string, message: MarketplaceMessage,
 ): Promise<GraphRunResult> {
-  const response = await fetch("/api/graphs/conversation/start", {
+  const response = await fetch(apiUrl("/graphs/conversation/start"), {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Trace-Id": threadId },
     body: JSON.stringify({
@@ -195,7 +201,7 @@ export async function streamConversation(
   message: MarketplaceMessage,
   onUpdate: (nodeNames: string[], update: GraphState) => void,
 ): Promise<GraphRunResult> {
-  const response = await fetch("/api/graphs/conversation/stream", {
+  const response = await fetch(apiUrl("/graphs/conversation/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Trace-Id": threadId },
     body: JSON.stringify({
@@ -263,7 +269,7 @@ export async function streamConversation(
 export async function reviewConversation(
   threadId: string, action: "approve" | "reject" | "edit", message?: string,
 ): Promise<GraphRunResult> {
-  const response = await fetch(`/api/graphs/conversation/${encodeURIComponent(threadId)}/approval`, {
+  const response = await fetch(apiUrl(`/graphs/conversation/${encodeURIComponent(threadId)}/approval`), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, ...(message !== undefined && { message }) }),
@@ -273,7 +279,7 @@ export async function reviewConversation(
 }
 
 export async function continueBid(threadId: string): Promise<GraphRunResult> {
-  const response = await fetch(`/api/graphs/bid/${encodeURIComponent(threadId)}/continue`, {
+  const response = await fetch(apiUrl(`/graphs/bid/${encodeURIComponent(threadId)}/continue`), {
     method: "POST",
   });
   if (!response.ok) {
@@ -288,7 +294,7 @@ export async function reviewBid(
   coverLetter?: string,
   screeningAnswers?: string[],
 ): Promise<GraphRunResult> {
-  const response = await fetch(`/api/graphs/bid/${encodeURIComponent(threadId)}/approval`, {
+  const response = await fetch(apiUrl(`/graphs/bid/${encodeURIComponent(threadId)}/approval`), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -319,7 +325,7 @@ export async function streamBidAnalysis(
   threadId: string,
   onUpdate: (nodeNames: string[], update: GraphState) => void,
 ): Promise<GraphRunResult> {
-  const response = await fetch("/api/graphs/bid/stream", {
+  const response = await fetch(apiUrl("/graphs/bid/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
