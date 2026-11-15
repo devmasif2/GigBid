@@ -14,6 +14,7 @@ COPY data/sample ./data/sample
 COPY gigsim_local ./gigsim_local
 COPY mcp_servers ./mcp_servers
 COPY rag ./rag
+COPY worker ./worker
 
 RUN uv sync --frozen --no-dev
 
